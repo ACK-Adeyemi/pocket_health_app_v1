@@ -44,28 +44,29 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'demo-api-key',
-    appId: '1:123456789:web:demo',
-    messagingSenderId: '123456789',
-    projectId: 'pocket-health-demo',
-    authDomain: 'pocket-health-demo.firebaseapp.com',
-    storageBucket: 'pocket-health-demo.appspot.com',
+    apiKey: 'AIzaSyCaLb8CXwWCCRHu5okLuHjqC73zUf22qtk',
+    appId: '1:364305144256:web:7d29a896eafcf9f2b61025',
+    messagingSenderId: '364305144256',
+    projectId: 'pocket-health-001',
+    authDomain: 'pocket-health-001.firebaseapp.com',
+    storageBucket: 'pocket-health-001.firebasestorage.app',
+    measurementId: 'G-HTVR8H3QL5',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'demo-api-key',
-    appId: '1:123456789:android:demo',
-    messagingSenderId: '123456789',
-    projectId: 'pocket-health-demo',
-    storageBucket: 'pocket-health-demo.appspot.com',
+    apiKey: 'AIzaSyAQy1iqcGoKdenZ-YP1EO0H77yT0r6H9pc',
+    appId: '1:364305144256:android:e9e4fc3eb3520551b61025',
+    messagingSenderId: '364305144256',
+    projectId: 'pocket-health-001',
+    storageBucket: 'pocket-health-001.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'demo-api-key',
-    appId: '1:123456789:ios:demo',
-    messagingSenderId: '123456789',
-    projectId: 'pocket-health-demo',
-    storageBucket: 'pocket-health-demo.appspot.com',
+    apiKey: 'AIzaSyABtozche8Cpqzd72Jg23ZUHqJ8Vut8Miw',
+    appId: '1:364305144256:ios:cb56249f7eff0cb3b61025',
+    messagingSenderId: '364305144256',
+    projectId: 'pocket-health-001',
+    storageBucket: 'pocket-health-001.firebasestorage.app',
     iosBundleId: 'com.example.pocketHealth',
   );
 

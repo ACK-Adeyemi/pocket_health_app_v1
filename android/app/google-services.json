@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "364305144256",
+    "project_id": "pocket-health-001",
+    "storage_bucket": "pocket-health-001.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:364305144256:android:e9e4fc3eb3520551b61025",
+        "android_client_info": {
+          "package_name": "com.example.pocket_health"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAQy1iqcGoKdenZ-YP1EO0H77yT0r6H9pc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
