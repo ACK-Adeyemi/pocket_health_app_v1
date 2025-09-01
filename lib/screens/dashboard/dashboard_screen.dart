@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../utils/app_colors.dart';
+import '../health/health_tracking_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -32,7 +33,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         index: _currentIndex,
         children: const [
           _HomeTab(),
-          _HealthTab(),
+          HealthTrackingScreen(),
           _CommunityTab(),
           _ProfileTab(),
         ],
@@ -320,45 +321,6 @@ class _HomeTab extends StatelessWidget {
   }
 }
 
-class _HealthTab extends StatelessWidget {
-  const _HealthTab();
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.all(24.w),
-        child: Column(
-          children: [
-            Text(
-              'Health Tracking',
-              style: TextStyle(
-                fontSize: 24.sp,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const Spacer(),
-            Icon(
-              Icons.favorite_outline,
-              size: 64.sp,
-              color: AppColors.textSecondary,
-            ),
-            SizedBox(height: 16.h),
-            Text(
-              'Health tracking features coming soon!',
-              style: TextStyle(
-                fontSize: 16.sp,
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const Spacer(),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 class _CommunityTab extends StatelessWidget {
   const _CommunityTab();

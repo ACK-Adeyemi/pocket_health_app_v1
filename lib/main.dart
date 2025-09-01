@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'firebase_options.dart';
 import 'providers/auth_provider.dart';
 import 'providers/user_provider.dart';
+import 'providers/health_tracking_provider.dart';
 import 'screens/splash_screen.dart';
 import 'screens/welcome_screen.dart';
 import 'screens/auth/login_screen.dart';
@@ -31,6 +32,7 @@ class PocketHealthApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()),
+        ChangeNotifierProvider(create: (_) => HealthTrackingProvider()),
       ],
       child: ScreenUtilInit(
         designSize: const Size(375, 812), // iPhone 12 Pro dimensions
