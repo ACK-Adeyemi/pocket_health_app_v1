@@ -60,21 +60,99 @@ class _SplashScreenState extends State<SplashScreen>
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final userProvider = Provider.of<UserProvider>(context, listen: false);
 
-    if (authProvider.isAuthenticated) {
-      // User is logged in, check if they've completed onboarding
-      await userProvider.loadUserProfile();
-      
-      if (userProvider.hasCompletedOnboarding) {
-        // Go to dashboard
-        if (mounted) context.go('/dashboard');
-      } else {
-        // Go to onboarding
-        if (mounted) context.go('/onboarding');
-      }
-    } else {
+    if (!authProvider.isAuthenticated) {
       // User is not logged in, go to welcome screen
       if (mounted) context.go('/welcome');
+      return;
     }
+
+    // User is authenticated, try to load their profile
+    final result = await userProvider.loadUserProfile();
+    
+    if (!mounted) return;
+
+    switch (result) {
+      case ProfileLoadResult.success:
+        // Profile loaded successfully, check onboarding status
+        if (userProvider.hasCompletedOnboarding) {
+          context.go('/dashboard');
+        } else {
+          context.go('/onboarding');
+        }
+        break;
+        
+      case ProfileLoadResult.notFound:
+        // User exists but no profile found, go to onboarding
+        context.go('/welcome');
+        _showErrorDialog();
+        break;
+        
+      case ProfileLoadResult.error:
+        // Error loading profile, show error screen with retry
+        _showErrorDialog();
+        break;
+        
+      case ProfileLoadResult.notAuthenticated:
+        // Should not happen since we checked above, but handle it
+        context.go('/welcome');
+        break;
+    }
+  }
+
+  void _showErrorDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Connection Error',
+          style: TextStyle(
+            fontSize: 18.sp,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        content: Text(
+          'Unable to load your profile. Please check your internet connection and try again.',
+          style: TextStyle(
+            fontSize: 14.sp,
+            color: AppColors.textSecondary,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              context.go('/welcome');
+            },
+            child: Text(
+              'Sign Out',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 14.sp,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _checkAuthStatus(); // Retry
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(
+              'Retry',
+              style: TextStyle(
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

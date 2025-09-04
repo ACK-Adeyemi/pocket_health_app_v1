@@ -4,6 +4,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../models/user_profile.dart';
 import '../models/health_condition.dart';
 
+enum ProfileLoadResult {
+  success,
+  notFound,
+  error,
+  notAuthenticated,
+}
+
 class UserProvider extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -197,7 +204,8 @@ class UserProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> loadUserProfile() async {
+  // Enhanced load user profile with detailed status
+  Future<ProfileLoadResult> loadUserProfile() async {
     try {
       _setLoading(true);
       _setError(null);
@@ -206,7 +214,7 @@ class UserProvider extends ChangeNotifier {
       if (user == null) {
         _setError('User not authenticated');
         _setLoading(false);
-        return false;
+        return ProfileLoadResult.notAuthenticated;
       }
 
       final doc = await _firestore
@@ -216,17 +224,24 @@ class UserProvider extends ChangeNotifier {
 
       if (doc.exists) {
         _userProfile = UserProfile.fromMap(doc.data()!);
+        _setLoading(false);
+        return ProfileLoadResult.success;
       } else {
         _userProfile = null;
+        _setLoading(false);
+        return ProfileLoadResult.notFound;
       }
-
-      _setLoading(false);
-      return true;
     } catch (e) {
       _setLoading(false);
       _setError('Failed to load user profile: ${e.toString()}');
-      return false;
+      return ProfileLoadResult.error;
     }
+  }
+
+  // Legacy method for backward compatibility
+  Future<bool> loadUserProfileLegacy() async {
+    final result = await loadUserProfile();
+    return result == ProfileLoadResult.success;
   }
 
   Future<bool> updateUserProfile({

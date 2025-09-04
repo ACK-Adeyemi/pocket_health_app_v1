@@ -6,8 +6,8 @@ import '../../providers/user_provider.dart';
 import '../../models/health_condition.dart';
 import '../../models/health_metric.dart';
 import '../../utils/app_colors.dart';
-// import 'add_health_entry_screen.dart';
-// import 'condition_detail_screen.dart';
+import 'add_health_entry_screen.dart';
+import 'condition_detail_screen.dart';
 
 class HealthTrackingScreen extends StatefulWidget {
   const HealthTrackingScreen({super.key});
@@ -576,23 +576,30 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
     }
   }
 
-  void _navigateToAddEntry(HealthCondition condition, HealthMetric? metric) {
-    // TODO: Navigate to add health entry screen
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Add entry for ${condition.name} - Coming soon!'),
-        backgroundColor: AppColors.primary,
+  void _navigateToAddEntry(HealthCondition condition, HealthMetric? metric) async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => AddHealthEntryScreen(
+          condition: condition,
+          selectedMetric: metric,
+        ),
       ),
     );
+    if (result == true) {
+      _loadHealthData(); // Refresh data after adding entry
+    }
   }
 
-  void _navigateToConditionDetail(HealthCondition condition) {
-    // TODO: Navigate to condition detail screen
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${condition.name} details - Coming soon!'),
-        backgroundColor: AppColors.primary,
+  void _navigateToConditionDetail(HealthCondition condition) async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ConditionDetailScreen(
+          condition: condition,
+        ),
       ),
     );
+    if (result == true) {
+      _loadHealthData(); // Refresh data if needed
+    }
   }
 }

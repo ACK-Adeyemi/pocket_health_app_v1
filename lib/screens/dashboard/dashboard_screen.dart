@@ -22,7 +22,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.initState();
     // Load user profile when dashboard loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<UserProvider>(context, listen: false).loadUserProfile();
+      Provider.of<UserProvider>(context, listen: false).loadUserProfileLegacy();
     });
   }
 

@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/user_provider.dart';
+import '../../models/health_condition.dart';
 import '../../utils/app_colors.dart';
 import 'basic_info_step.dart';
 import 'health_conditions_step.dart';
@@ -64,48 +65,84 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     }
   }
 
+  // Helper method to convert condition IDs to HealthCondition objects
+  List<HealthCondition> _getSelectedHealthConditions() {
+    if (_selectedConditions.isEmpty) return [];
+    
+    final availableConditions = HealthCondition.getCommonConditions();
+    final selectedHealthConditions = <HealthCondition>[];
+    
+    for (final conditionId in _selectedConditions) {
+      final condition = availableConditions.firstWhere(
+        (c) => c.id == conditionId,
+        orElse: () => HealthCondition(
+          id: conditionId,
+          name: 'Unknown Condition',
+          description: 'Custom health condition',
+          addedAt: DateTime.now(),
+          category: 'other',
+        ),
+      );
+      selectedHealthConditions.add(condition);
+    }
+    
+    return selectedHealthConditions;
+  }
+
   Future<void> _completeOnboarding() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
 
-    // Create user profile
-    final success = await userProvider.createUserProfile(
-      name: _name,
-      age: _age,
-      height: _height,
-      weight: _weight,
-      heightUnit: _heightUnit,
-      weightUnit: _weightUnit,
-    );
+    try {
+      // Create user profile
+      final success = await userProvider.createUserProfile(
+        name: _name,
+        age: _age,
+        height: _height,
+        weight: _weight,
+        heightUnit: _heightUnit,
+        weightUnit: _weightUnit,
+      );
 
-    if (success) {
+      if (!success) {
+        throw Exception('Failed to create user profile');
+      }
+
       // Update health conditions if any selected
       if (_selectedConditions.isNotEmpty) {
-        // Convert selected condition IDs to HealthCondition objects
-        // This would typically involve fetching from a predefined list
-        // For now, we'll skip this step in the basic implementation
+        final healthConditions = _getSelectedHealthConditions();
+        final conditionsSuccess = await userProvider.updateHealthConditions(healthConditions);
+        if (!conditionsSuccess) {
+          print('Warning: Failed to update health conditions, but continuing onboarding');
+        }
       }
 
       // Update GP details if provided
       if (_gpName.isNotEmpty) {
-        await userProvider.updateGPDetails(
+        final gpSuccess = await userProvider.updateGPDetails(
           gpName: _gpName,
           practiceName: _practiceName,
           phone: _gpPhone,
           email: _gpEmail,
         );
+        if (!gpSuccess) {
+          print('Warning: Failed to update GP details, but continuing onboarding');
+        }
       }
 
       // Complete onboarding
-      await userProvider.completeOnboarding();
+      final onboardingSuccess = await userProvider.completeOnboarding();
+      if (!onboardingSuccess) {
+        throw Exception('Failed to complete onboarding');
+      }
 
       if (mounted) {
         context.go('/dashboard');
       }
-    } else {
+    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to complete onboarding. Please try again.'),
+            content: Text('Failed to complete onboarding: ${e.toString()}'),
             backgroundColor: AppColors.error,
           ),
         );

@@ -32,16 +32,35 @@ class HealthTrackingProvider with ChangeNotifier {
     _error = null;
 
     try {
-      final querySnapshot = await _firestore
+      // Check if any entries exist for this user first
+      final checkSnapshot = await _firestore
           .collection('health_entries')
           .where('userId', isEqualTo: userId)
-          .orderBy('timestamp', descending: true)
-          .limit(100)
+          .limit(1)
           .get();
 
-      _recentEntries = querySnapshot.docs
+      if (checkSnapshot.docs.isEmpty) {
+        // No entries exist yet - this is normal for new users
+        _recentEntries = [];
+        _entriesByCondition.clear();
+        notifyListeners();
+        return;
+      }
+
+      // Load all entries for the user (avoiding composite index)
+      final allEntriesSnapshot = await _firestore
+          .collection('health_entries')
+          .where('userId', isEqualTo: userId)
+          .get();
+
+      // Convert to HealthEntry objects
+      final allEntries = allEntriesSnapshot.docs
           .map((doc) => HealthEntry.fromMap({...doc.data(), 'id': doc.id}))
           .toList();
+
+      // Sort by timestamp descending and take first 100 (in-memory sorting)
+      allEntries.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      _recentEntries = allEntries.take(100).toList();
 
       // Group entries by condition
       _entriesByCondition.clear();
@@ -212,6 +231,20 @@ class HealthTrackingProvider with ChangeNotifier {
       return false;
     } finally {
       _setLoading(false);
+    }
+  }
+
+  // Check if user has any health entries
+  Future<bool> hasHealthEntries(String userId) async {
+    try {
+      final snapshot = await _firestore
+          .collection('health_entries')
+          .where('userId', isEqualTo: userId)
+          .limit(1)
+          .get();
+      return snapshot.docs.isNotEmpty;
+    } catch (e) {
+      return false;
     }
   }
 
