@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'health_condition.dart';
 
 class UserProfile {
@@ -43,8 +44,8 @@ class UserProfile {
       'weightUnit': weightUnit,
       'healthConditions': healthConditions.map((c) => c.toMap()).toList(),
       'gpDetails': gpDetails,
-      'createdAt': createdAt.toIso8601String(),
-      'updatedAt': updatedAt.toIso8601String(),
+      'createdAt': Timestamp.fromDate(createdAt),
+      'updatedAt': Timestamp.fromDate(updatedAt),
       'hasCompletedOnboarding': hasCompletedOnboarding,
     };
   }
@@ -64,10 +65,32 @@ class UserProfile {
               .toList() ??
           [],
       gpDetails: map['gpDetails'] as Map<String, dynamic>?,
-      createdAt: DateTime.parse(map['createdAt'] ?? DateTime.now().toIso8601String()),
-      updatedAt: DateTime.parse(map['updatedAt'] ?? DateTime.now().toIso8601String()),
+      createdAt: _parseDateTime(map['createdAt']),
+      updatedAt: _parseDateTime(map['updatedAt']),
       hasCompletedOnboarding: map['hasCompletedOnboarding'] ?? false,
     );
+  }
+
+  // Helper method to parse DateTime from either Timestamp or String
+  static DateTime _parseDateTime(dynamic dateValue) {
+    if (dateValue == null) {
+      return DateTime.now();
+    }
+    
+    if (dateValue is Timestamp) {
+      return dateValue.toDate();
+    }
+    
+    if (dateValue is String) {
+      try {
+        return DateTime.parse(dateValue);
+      } catch (e) {
+        return DateTime.now();
+      }
+    }
+    
+    // Fallback for any other type
+    return DateTime.now();
   }
 
   UserProfile copyWith({

@@ -43,7 +43,10 @@ class _LoginScreenState extends State<LoginScreen> {
     if (success && mounted) {
       // Load user profile to check onboarding status
       await userProvider.loadUserProfile();
-      
+      // ACKA DEBUG TODO
+      print("ACKA Debug log: Onboarding Check = ${userProvider.hasCompletedOnboarding}");
+      print("ACKA Debug log: Onboarding Check = ${userProvider}");
+
       if (userProvider.hasCompletedOnboarding) {
         context.go('/dashboard');
       } else {

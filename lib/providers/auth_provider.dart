@@ -149,6 +149,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  // Error code details can be found in 'firebase-auth.js' (in browser dev console > network tab)
   String _getErrorMessage(String errorCode) {
     switch (errorCode) {
       case 'user-not-found':
@@ -165,6 +166,8 @@ class AuthProvider extends ChangeNotifier {
         return 'This account has been disabled. Please contact support.';
       case 'too-many-requests':
         return 'Too many failed attempts. Please try again later.';
+      case 'invalid-credential':
+        return 'No user found with this email address OR Incorrect password OR Invalid email.';
       case 'operation-not-allowed':
         return 'Email/password accounts are not enabled. Please contact support.';
       default:

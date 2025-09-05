@@ -104,12 +104,8 @@ class UserProvider extends ChangeNotifier {
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
-      if (_userProfile != null) {
-        _userProfile = _userProfile!.copyWith(
-          healthConditions: conditions,
-          updatedAt: DateTime.now(),
-        );
-      }
+      // Reload the user profile to get the updated timestamp from Firestore
+      await loadUserProfile();
 
       _setLoading(false);
       return true;
@@ -152,12 +148,8 @@ class UserProvider extends ChangeNotifier {
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
-      if (_userProfile != null) {
-        _userProfile = _userProfile!.copyWith(
-          gpDetails: gpDetails,
-          updatedAt: DateTime.now(),
-        );
-      }
+      // Reload the user profile to get the updated timestamp from Firestore
+      await loadUserProfile();
 
       _setLoading(false);
       return true;
@@ -188,12 +180,8 @@ class UserProvider extends ChangeNotifier {
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
-      if (_userProfile != null) {
-        _userProfile = _userProfile!.copyWith(
-          hasCompletedOnboarding: true,
-          updatedAt: DateTime.now(),
-        );
-      }
+      // Reload the user profile to get the updated timestamp from Firestore
+      await loadUserProfile();
 
       _setLoading(false);
       return true;
@@ -214,6 +202,8 @@ class UserProvider extends ChangeNotifier {
       if (user == null) {
         _setError('User not authenticated');
         _setLoading(false);
+        // ACKA DEBUG TODO
+        print("ACKA Debug log: User not auth.");
         return ProfileLoadResult.notAuthenticated;
       }
 
@@ -225,15 +215,21 @@ class UserProvider extends ChangeNotifier {
       if (doc.exists) {
         _userProfile = UserProfile.fromMap(doc.data()!);
         _setLoading(false);
+        // ACKA DEBUG TODO
+        print("ACKA Debug log: User loaded successfully.");
         return ProfileLoadResult.success;
       } else {
         _userProfile = null;
         _setLoading(false);
+        // ACKA DEBUG TODO
+        print("ACKA Debug log: User not found.");
         return ProfileLoadResult.notFound;
       }
     } catch (e) {
       _setLoading(false);
       _setError('Failed to load user profile: ${e.toString()}');
+      // ACKA DEBUG TODO - APP CURRENTLY GETS HERE = EXCEPTION ALWAYS, LOADING DOESN'T WORK...
+        print("ACKA Debug log: Complete fail.");
       return ProfileLoadResult.error;
     }
   }
@@ -279,17 +275,8 @@ class UserProvider extends ChangeNotifier {
           .doc(user.uid)
           .update(updates);
 
-      if (_userProfile != null) {
-        _userProfile = _userProfile!.copyWith(
-          name: name ?? _userProfile!.name,
-          age: age ?? _userProfile!.age,
-          height: height ?? _userProfile!.height,
-          weight: weight ?? _userProfile!.weight,
-          heightUnit: heightUnit ?? _userProfile!.heightUnit,
-          weightUnit: weightUnit ?? _userProfile!.weightUnit,
-          updatedAt: DateTime.now(),
-        );
-      }
+      // Reload the user profile to get the updated timestamp from Firestore
+      await loadUserProfile();
 
       _setLoading(false);
       return true;
