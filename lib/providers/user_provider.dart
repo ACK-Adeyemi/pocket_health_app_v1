@@ -202,8 +202,6 @@ class UserProvider extends ChangeNotifier {
       if (user == null) {
         _setError('User not authenticated');
         _setLoading(false);
-        // ACKA DEBUG TODO
-        print("ACKA Debug log: User not auth.");
         return ProfileLoadResult.notAuthenticated;
       }
 
@@ -215,21 +213,15 @@ class UserProvider extends ChangeNotifier {
       if (doc.exists) {
         _userProfile = UserProfile.fromMap(doc.data()!);
         _setLoading(false);
-        // ACKA DEBUG TODO
-        print("ACKA Debug log: User loaded successfully.");
         return ProfileLoadResult.success;
       } else {
         _userProfile = null;
         _setLoading(false);
-        // ACKA DEBUG TODO
-        print("ACKA Debug log: User not found.");
         return ProfileLoadResult.notFound;
       }
     } catch (e) {
       _setLoading(false);
       _setError('Failed to load user profile: ${e.toString()}');
-      // ACKA DEBUG TODO - APP CURRENTLY GETS HERE = EXCEPTION ALWAYS, LOADING DOESN'T WORK...
-        print("ACKA Debug log: Complete fail.");
       return ProfileLoadResult.error;
     }
   }
