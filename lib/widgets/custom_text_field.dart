@@ -12,6 +12,7 @@ class CustomTextField extends StatelessWidget {
   final Widget? prefixIcon;
   final String? Function(String?)? validator;
   final void Function(String)? onChanged;
+  final void Function(String)? onSubmitted;
   final void Function()? onTap;
   final bool readOnly;
   final int maxLines;
@@ -30,6 +31,7 @@ class CustomTextField extends StatelessWidget {
     this.prefixIcon,
     this.validator,
     this.onChanged,
+    this.onSubmitted,
     this.onTap,
     this.readOnly = false,
     this.maxLines = 1,
@@ -58,6 +60,7 @@ class CustomTextField extends StatelessWidget {
           keyboardType: keyboardType,
           validator: validator,
           onChanged: onChanged,
+          onFieldSubmitted: onSubmitted,
           onTap: onTap,
           readOnly: readOnly,
           maxLines: maxLines,

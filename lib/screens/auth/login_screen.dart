@@ -116,6 +116,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   controller: _passwordController,
                   label: 'Password',
                   obscureText: _obscurePassword,
+                  onSubmitted: (_) => _handleLogin(),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscurePassword ? Icons.visibility : Icons.visibility_off,
