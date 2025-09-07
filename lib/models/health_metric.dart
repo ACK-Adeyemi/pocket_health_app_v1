@@ -27,6 +27,11 @@ enum MetricUnit {
 }
 
 class HealthMetric {
+  // Mapping of icon code points to const IconData instances for tree shaking
+  static const Map<int, IconData> _iconMapping = {
+    0xe3f4: Icons.help_outline, // Default fallback
+  };
+
   final String id;
   final String conditionId;
   final String name;
@@ -95,7 +100,7 @@ class HealthMetric {
       instructions: map['instructions'],
       isRequired: map['isRequired'] ?? false,
       color: Color(map['color'] ?? 0xFF1565C0),
-      icon: IconData(map['icon'] ?? Icons.health_and_safety.codePoint, fontFamily: 'MaterialIcons'),
+      icon: _iconMapping[map['icon'] ?? 0xe3f4] ?? Icons.help_outline,
     );
   }
 
