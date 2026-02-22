@@ -1,6 +1,24 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'health_condition.dart';
 
+/// User roles for community access control
+enum UserRole {
+  user('user', 'Regular user with community access'),
+  moderator('moderator', 'Content moderator with elevated permissions'),
+  admin('admin', 'Administrator with full system access');
+
+  const UserRole(this.value, this.description);
+  final String value;
+  final String description;
+
+  static UserRole fromString(String value) {
+    return UserRole.values.firstWhere(
+      (role) => role.value == value,
+      orElse: () => UserRole.user,
+    );
+  }
+}
+
 class UserProfile {
   final String uid;
   final String email;
@@ -15,6 +33,9 @@ class UserProfile {
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool hasCompletedOnboarding;
+  final UserRole role; // User role for community permissions
+  final String? anonymousId; // SHA-256 hash for community anonymity
+  final bool isHealthcareProfessional; // For specialized moderation
 
   UserProfile({
     required this.uid,
@@ -30,6 +51,9 @@ class UserProfile {
     required this.createdAt,
     required this.updatedAt,
     this.hasCompletedOnboarding = false,
+    this.role = UserRole.user,
+    this.anonymousId,
+    this.isHealthcareProfessional = false,
   });
 
   Map<String, dynamic> toMap() {
@@ -47,6 +71,9 @@ class UserProfile {
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
       'hasCompletedOnboarding': hasCompletedOnboarding,
+      'role': role.value,
+      'anonymousId': anonymousId,
+      'isHealthcareProfessional': isHealthcareProfessional,
     };
   }
 
@@ -68,6 +95,9 @@ class UserProfile {
       createdAt: _parseDateTime(map['createdAt']),
       updatedAt: _parseDateTime(map['updatedAt']),
       hasCompletedOnboarding: map['hasCompletedOnboarding'] ?? false,
+      role: UserRole.fromString(map['role'] ?? 'user'),
+      anonymousId: map['anonymousId'] as String?,
+      isHealthcareProfessional: map['isHealthcareProfessional'] ?? false,
     );
   }
 
@@ -107,6 +137,9 @@ class UserProfile {
     DateTime? createdAt,
     DateTime? updatedAt,
     bool? hasCompletedOnboarding,
+    UserRole? role,
+    String? anonymousId,
+    bool? isHealthcareProfessional,
   }) {
     return UserProfile(
       uid: uid ?? this.uid,
@@ -122,6 +155,9 @@ class UserProfile {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       hasCompletedOnboarding: hasCompletedOnboarding ?? this.hasCompletedOnboarding,
+      role: role ?? this.role,
+      anonymousId: anonymousId ?? this.anonymousId,
+      isHealthcareProfessional: isHealthcareProfessional ?? this.isHealthcareProfessional,
     );
   }
 

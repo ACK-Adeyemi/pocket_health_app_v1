@@ -6,6 +6,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../utils/app_colors.dart';
 import '../health/health_tracking_screen.dart';
+import '../community/community_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -34,7 +35,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: const [
           _HomeTab(),
           HealthTrackingScreen(),
-          _CommunityTab(),
+          CommunityScreen(),
           _ProfileTab(),
         ],
       ),
@@ -322,45 +323,7 @@ class _HomeTab extends StatelessWidget {
 }
 
 
-class _CommunityTab extends StatelessWidget {
-  const _CommunityTab();
 
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.all(24.w),
-        child: Column(
-          children: [
-            Text(
-              'Community',
-              style: TextStyle(
-                fontSize: 24.sp,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const Spacer(),
-            Icon(
-              Icons.people_outline,
-              size: 64.sp,
-              color: AppColors.textSecondary,
-            ),
-            SizedBox(height: 16.h),
-            Text(
-              'Community features coming soon!',
-              style: TextStyle(
-                fontSize: 16.sp,
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const Spacer(),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 class _ProfileTab extends StatelessWidget {
   const _ProfileTab();

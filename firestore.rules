@@ -1,0 +1,74 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function isModeratorOrAdmin() {
+      let data = getUserData();
+      return data.role == 'moderator' || data.role == 'admin';
+    }
+    
+    function isAdmin() {
+      return getUserData().role == 'admin';
+    }
+    
+    // Users collection
+    match /users/{userId} {
+      allow read, write: if isAuthenticated() && isOwner(userId);
+      allow read: if isAuthenticated() && isAdmin();
+    }
+    
+    // Groups collection
+    match /groups/{groupId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && isAdmin();
+    }
+    
+    // Threads collection
+    match /threads/{threadId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.authorId == request.auth.uid;
+      allow update, delete: if isAuthenticated() && (resource.data.authorId == request.auth.uid || isModeratorOrAdmin());
+      
+      // Allow vote count updates for anyone authenticated
+      allow update: if isAuthenticated() && 
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount', 'dislikeCount', 'commentCount', 'lastActivityAt', 'updatedAt']);
+    }
+    
+    // Comments collection
+    match /comments/{commentId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.authorId == request.auth.uid;
+      allow update, delete: if isAuthenticated() && (resource.data.authorId == request.auth.uid || isModeratorOrAdmin());
+      
+      // Allow vote count updates
+      allow update: if isAuthenticated() && 
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount', 'dislikeCount', 'updatedAt']);
+    }
+    
+    // Reports collection
+    match /reports/{reportId} {
+      allow read: if isAuthenticated() && isModeratorOrAdmin();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && isModeratorOrAdmin();
+      allow delete: if isAuthenticated() && isAdmin();
+    }
+    
+    // Votes subcollections
+    match /{path=**}/votes/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && isOwner(userId);
+    }
+  }
+}
