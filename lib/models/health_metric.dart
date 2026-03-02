@@ -391,6 +391,95 @@ class HealthMetric {
           ),
         ];
 
+      case 'copd':
+        return [
+          HealthMetric(
+            id: 'copd_breathlessness',
+            conditionId: 'copd',
+            name: 'Breathlessness',
+            description: 'Level of breathing difficulty',
+            type: MetricType.peakFlow,
+            unit: MetricUnit.scale0to10,
+            minValue: 0,
+            maxValue: 10,
+            instructions: 'Rate your breathlessness from 0 (Normal) to 10 (Very severe)',
+            isRequired: true,
+            color: const Color(0xFF4FC3F7),
+            icon: Icons.air,
+          ),
+        ];
+
+      case 'heart_disease':
+        return [
+          HealthMetric(
+            id: 'heart_fatigue',
+            conditionId: 'heart_disease',
+            name: 'Fatigue Level',
+            description: 'Level of tiredness',
+            type: MetricType.custom,
+            unit: MetricUnit.scale0to10,
+            minValue: 0,
+            maxValue: 10,
+            instructions: 'Rate your fatigue from 0 (No fatigue) to 10 (Exhausted)',
+            isRequired: true,
+            color: const Color(0xFFE57373),
+            icon: Icons.battery_alert,
+          ),
+        ];
+
+      case 'migraine':
+        return [
+          HealthMetric(
+            id: 'migraine_severity',
+            conditionId: 'migraine',
+            name: 'Headache Severity',
+            description: 'Pain level of migraine',
+            type: MetricType.pain,
+            unit: MetricUnit.scale0to10,
+            minValue: 0,
+            maxValue: 10,
+            instructions: 'Rate your head pain from 0 (No pain) to 10 (Worst pain)',
+            isRequired: true,
+            color: const Color(0xFF9575CD),
+            icon: Icons.sensors,
+          ),
+        ];
+
+      case 'obesity':
+        return [
+          HealthMetric(
+            id: 'obesity_activity',
+            conditionId: 'obesity',
+            name: 'Activity Level',
+            description: 'Daily activity minutes',
+            type: MetricType.weight,
+            unit: MetricUnit.minutes,
+            options: ['None', '< 15 mins', '15-30 mins', '30-60 mins', '60+ mins'],
+            instructions: 'How active were you today?',
+            isRequired: true,
+            color: const Color(0xFF81C784),
+            icon: Icons.directions_run,
+          ),
+        ];
+
+      case 'thyroid':
+        return [
+          HealthMetric(
+            id: 'thyroid_energy',
+            conditionId: 'thyroid',
+            name: 'Energy Level',
+            description: 'Current energy level',
+            type: MetricType.custom,
+            unit: MetricUnit.scale0to10,
+            minValue: 0,
+            maxValue: 10,
+            instructions: 'Rate your energy from 0 (No energy) to 10 (Full of energy)',
+            isRequired: true,
+            color: const Color(0xFFFFB74D),
+            icon: Icons.bolt,
+          ),
+        ];
+
       default:
         return [];
     }

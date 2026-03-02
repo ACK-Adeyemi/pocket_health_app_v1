@@ -36,6 +36,11 @@ class UserProfile {
   final UserRole role; // User role for community permissions
   final String? anonymousId; // SHA-256 hash for community anonymity
   final bool isHealthcareProfessional; // For specialized moderation
+  
+  // New fields for Quick Check-In and A/B Testing
+  final String? abTestGroup; // 'A' (Quick emphasis) or 'B' (Classic emphasis)
+  final String preferredLoggingMode; // 'quick' or 'classic'
+  final bool hasSeenQuickCheckInOnboarding;
 
   UserProfile({
     required this.uid,
@@ -54,6 +59,9 @@ class UserProfile {
     this.role = UserRole.user,
     this.anonymousId,
     this.isHealthcareProfessional = false,
+    this.abTestGroup,
+    this.preferredLoggingMode = 'classic',
+    this.hasSeenQuickCheckInOnboarding = false,
   });
 
   Map<String, dynamic> toMap() {
@@ -74,6 +82,9 @@ class UserProfile {
       'role': role.value,
       'anonymousId': anonymousId,
       'isHealthcareProfessional': isHealthcareProfessional,
+      'abTestGroup': abTestGroup,
+      'preferredLoggingMode': preferredLoggingMode,
+      'hasSeenQuickCheckInOnboarding': hasSeenQuickCheckInOnboarding,
     };
   }
 
@@ -98,6 +109,9 @@ class UserProfile {
       role: UserRole.fromString(map['role'] ?? 'user'),
       anonymousId: map['anonymousId'] as String?,
       isHealthcareProfessional: map['isHealthcareProfessional'] ?? false,
+      abTestGroup: map['abTestGroup'],
+      preferredLoggingMode: map['preferredLoggingMode'] ?? 'classic',
+      hasSeenQuickCheckInOnboarding: map['hasSeenQuickCheckInOnboarding'] ?? false,
     );
   }
 
@@ -140,6 +154,9 @@ class UserProfile {
     UserRole? role,
     String? anonymousId,
     bool? isHealthcareProfessional,
+    String? abTestGroup,
+    String? preferredLoggingMode,
+    bool? hasSeenQuickCheckInOnboarding,
   }) {
     return UserProfile(
       uid: uid ?? this.uid,
@@ -158,6 +175,9 @@ class UserProfile {
       role: role ?? this.role,
       anonymousId: anonymousId ?? this.anonymousId,
       isHealthcareProfessional: isHealthcareProfessional ?? this.isHealthcareProfessional,
+      abTestGroup: abTestGroup ?? this.abTestGroup,
+      preferredLoggingMode: preferredLoggingMode ?? this.preferredLoggingMode,
+      hasSeenQuickCheckInOnboarding: hasSeenQuickCheckInOnboarding ?? this.hasSeenQuickCheckInOnboarding,
     );
   }
 
@@ -179,6 +199,7 @@ class UserProfile {
   // Calculate BMI
   double get bmi {
     final heightInMeters = heightInCm / 100;
+    if (heightInMeters == 0) return 0;
     return weightInKg / (heightInMeters * heightInMeters);
   }
 

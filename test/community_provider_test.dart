@@ -26,6 +26,8 @@ void main() {
           weight: 70.0,
           heightUnit: 'cm',
           weightUnit: 'kg',
+          preferredLoggingMode: 'classic',
+          hasSeenQuickCheckInOnboarding: false,
         );
 
         // This would test the actual provider method
@@ -49,6 +51,8 @@ void main() {
           weight: 75.0,
           heightUnit: 'cm',
           weightUnit: 'kg',
+          preferredLoggingMode: 'classic',
+          hasSeenQuickCheckInOnboarding: false,
         );
 
         // Test role-based permissions
@@ -426,6 +430,8 @@ void main() {
           weight: 80.0,
           heightUnit: 'cm',
           weightUnit: 'kg',
+          preferredLoggingMode: 'classic',
+          hasSeenQuickCheckInOnboarding: false,
         );
 
         final adminUser = UserProfile(
@@ -443,6 +449,8 @@ void main() {
           weight: 75.0,
           heightUnit: 'cm',
           weightUnit: 'kg',
+          preferredLoggingMode: 'classic',
+          hasSeenQuickCheckInOnboarding: false,
         );
 
         final regularUser = UserProfile(
@@ -460,6 +468,8 @@ void main() {
           weight: 65.0,
           heightUnit: 'cm',
           weightUnit: 'kg',
+          preferredLoggingMode: 'classic',
+          hasSeenQuickCheckInOnboarding: false,
         );
 
         // Test permissions

@@ -1,74 +1,120 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper functions
+    
+    // Simple helper functions
     function isAuthenticated() {
       return request.auth != null;
     }
     
-    function getUserData() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-    }
-    
     function isOwner(userId) {
-      return request.auth.uid == userId;
+      return request.auth != null && request.auth.uid == userId;
     }
     
-    function isModeratorOrAdmin() {
-      let data = getUserData();
-      return data.role == 'moderator' || data.role == 'admin';
+    function isModerator() {
+      let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid));
+      return userDoc.data != null && 
+             (userDoc.data.role == 'moderator' || userDoc.data.role == 'admin');
     }
     
     function isAdmin() {
-      return getUserData().role == 'admin';
+      let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid));
+      return userDoc.data != null && userDoc.data.role == 'admin';
     }
     
     // Users collection
     match /users/{userId} {
-      allow read, write: if isAuthenticated() && isOwner(userId);
-      allow read: if isAuthenticated() && isAdmin();
+      allow read, write: if isOwner(userId) || isModerator();
+      allow read: if isAuthenticated(); // Allow reading other users for community features
     }
     
     // Groups collection
     match /groups/{groupId} {
       allow read: if isAuthenticated();
-      allow write: if isAuthenticated() && isAdmin();
+      allow create, update: if isAdmin();
+      allow update: if isModerator();
     }
     
     // Threads collection
     match /threads/{threadId} {
       allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && request.resource.data.authorId == request.auth.uid;
-      allow update, delete: if isAuthenticated() && (resource.data.authorId == request.auth.uid || isModeratorOrAdmin());
       
-      // Allow vote count updates for anyone authenticated
-      allow update: if isAuthenticated() && 
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount', 'dislikeCount', 'commentCount', 'lastActivityAt', 'updatedAt']);
+      allow create: if isAuthenticated() && 
+                   request.auth.uid == request.resource.data.authorId &&
+                   exists(/databases/$(database)/documents/groups/$(request.resource.data.groupId));
+      
+      allow update: if isOwner(resource.data.authorId) || isModerator() ||
+                   (isAuthenticated() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount', 'dislikeCount', 'commentCount', 'lastActivityAt', 'updatedAt']));
+      
+      allow delete: if isModerator();
     }
     
     // Comments collection
     match /comments/{commentId} {
       allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && request.resource.data.authorId == request.auth.uid;
-      allow update, delete: if isAuthenticated() && (resource.data.authorId == request.auth.uid || isModeratorOrAdmin());
       
-      // Allow vote count updates
-      allow update: if isAuthenticated() && 
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount', 'dislikeCount', 'updatedAt']);
+      allow create: if isAuthenticated() && 
+                   request.auth.uid == request.resource.data.authorId &&
+                   exists(/databases/$(database)/documents/threads/$(request.resource.data.threadId));
+      
+      allow update: if isOwner(resource.data.authorId) || isModerator() ||
+                   (isAuthenticated() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount', 'dislikeCount', 'updatedAt']));
+      
+      allow delete: if isModerator();
     }
     
     // Reports collection
     match /reports/{reportId} {
-      allow read: if isAuthenticated() && isModeratorOrAdmin();
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated() && isModeratorOrAdmin();
-      allow delete: if isAuthenticated() && isAdmin();
+      allow read: if isModerator();
+      allow create: if isAuthenticated() && 
+                   request.auth.uid == request.resource.data.reporterId;
+      allow update: if isModerator();
+      allow delete: if isAdmin();
     }
     
-    // Votes subcollections
-    match /{path=**}/votes/{userId} {
+    // Votes subcollection
+    match /{document=**}/votes/{voteId} {
       allow read: if isAuthenticated();
-      allow write: if isAuthenticated() && isOwner(userId);
+      allow create, update: if isAuthenticated() && 
+                           request.auth.uid == request.resource.data.userId;
+      allow delete: if isAuthenticated() && 
+                   resource.data.userId == request.auth.uid;
+    }
+    
+    // Health entries collection
+    match /health_entries/{entryId} {
+      allow read: if isOwner(resource.data.userId) || isModerator();
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isOwner(resource.data.userId) || isModerator();
+    }
+    
+    // Health conditions collection
+    match /health_conditions/{conditionId} {
+      allow read: if isOwner(resource.data.userId) || isModerator();
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isOwner(resource.data.userId) || isModerator();
+    }
+    
+    // GP details collection
+    match /gp_details/{gpId} {
+      allow read: if isOwner(resource.data.userId) || isModerator();
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isOwner(resource.data.userId);
+    }
+    
+    // Moderation actions collection
+    match /moderation_actions/{actionId} {
+      allow read, write: if isModerator();
+    }
+    
+    // System settings (admin only)
+    match /system_settings/{settingId} {
+      allow read, write: if isAdmin();
+    }
+    
+    // Audit logs (admin only)
+    match /audit_logs/{logId} {
+      allow read, write: if isAdmin();
     }
   }
 }

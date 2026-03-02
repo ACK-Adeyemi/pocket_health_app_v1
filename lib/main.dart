@@ -8,6 +8,7 @@ import 'providers/auth_provider.dart';
 import 'providers/user_provider.dart';
 import 'providers/health_tracking_provider.dart';
 import 'providers/community_provider.dart';
+import 'providers/quick_check_in_provider.dart';
 import 'screens/splash_screen.dart';
 import 'screens/welcome_screen.dart';
 import 'screens/auth/login_screen.dart';
@@ -35,6 +36,17 @@ class PocketHealthApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => HealthTrackingProvider()),
         ChangeNotifierProvider(create: (_) => CommunityProvider()),
+        ChangeNotifierProxyProvider2<UserProvider, HealthTrackingProvider, QuickCheckInProvider>(
+          create: (context) => QuickCheckInProvider(
+            userProvider: Provider.of<UserProvider>(context, listen: false),
+            healthProvider: Provider.of<HealthTrackingProvider>(context, listen: false),
+          ),
+          update: (context, userProvider, healthProvider, previous) => 
+            QuickCheckInProvider(
+              userProvider: userProvider,
+              healthProvider: healthProvider,
+            ),
+        ),
       ],
       child: ScreenUtilInit(
         designSize: const Size(375, 812), // iPhone 12 Pro dimensions

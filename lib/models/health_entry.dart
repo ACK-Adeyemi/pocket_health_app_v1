@@ -6,6 +6,7 @@ class HealthEntry {
   final dynamic value; // Can be double, String, or List<String>
   final DateTime timestamp;
   final String? notes;
+  final String source; // 'classic' or 'quick'
   final Map<String, dynamic>? additionalData;
 
   HealthEntry({
@@ -16,6 +17,7 @@ class HealthEntry {
     required this.value,
     required this.timestamp,
     this.notes,
+    this.source = 'classic',
     this.additionalData,
   });
 
@@ -28,6 +30,7 @@ class HealthEntry {
       'value': value,
       'timestamp': timestamp.toIso8601String(),
       'notes': notes,
+      'source': source,
       'additionalData': additionalData,
     };
   }
@@ -41,6 +44,7 @@ class HealthEntry {
       value: map['value'],
       timestamp: DateTime.parse(map['timestamp'] ?? DateTime.now().toIso8601String()),
       notes: map['notes'],
+      source: map['source'] ?? 'classic',
       additionalData: map['additionalData'] != null 
           ? Map<String, dynamic>.from(map['additionalData']) 
           : null,
@@ -55,6 +59,7 @@ class HealthEntry {
     dynamic value,
     DateTime? timestamp,
     String? notes,
+    String? source,
     Map<String, dynamic>? additionalData,
   }) {
     return HealthEntry(
@@ -65,6 +70,7 @@ class HealthEntry {
       value: value ?? this.value,
       timestamp: timestamp ?? this.timestamp,
       notes: notes ?? this.notes,
+      source: source ?? this.source,
       additionalData: additionalData ?? this.additionalData,
     );
   }

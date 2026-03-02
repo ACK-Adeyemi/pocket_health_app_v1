@@ -4,9 +4,11 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/user_provider.dart';
+import '../../providers/quick_check_in_provider.dart';
 import '../../utils/app_colors.dart';
 import '../health/health_tracking_screen.dart';
 import '../community/community_screen.dart';
+import '../health/quick_check_in_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -21,17 +23,72 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    // Load user profile when dashboard loads
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<UserProvider>(context, listen: false).loadUserProfileLegacy();
+    // Load user profile and check for onboarding when dashboard loads
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      await userProvider.loadUserProfileLegacy();
+      _checkOnboarding();
     });
+  }
+
+  void _showQuickCheckIn() {
+    QuickCheckInModal.show(context);
+  }
+
+  void _checkOnboarding() {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final userProfile = userProvider.userProfile;
+    
+    if (userProfile != null && !userProfile.hasSeenQuickCheckInOnboarding) {
+      _showOnboardingDialog();
+    }
+  }
+
+  void _showOnboardingDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+        title: Row(
+          children: [
+            const Icon(Icons.bolt, color: AppColors.accent),
+            SizedBox(width: 8.w),
+            const Text('New: Daily Pulse'),
+          ],
+        ),
+        content: const Text(
+          'We\'ve added a faster way to track your health. Use the new Check-In button to log your vitals in under 10 seconds.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Provider.of<UserProvider>(context, listen: false).markQuickCheckInOnboardingAsSeen();
+              Navigator.pop(context);
+            },
+            child: const Text('Got it!'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Provider.of<UserProvider>(context, listen: false).markQuickCheckInOnboardingAsSeen();
+              Navigator.pop(context);
+              _showQuickCheckIn();
+            },
+            child: const Text('Try it now'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context);
+    final userProfile = userProvider.userProfile;
+    final isGroupA = userProfile?.abTestGroup == 'A';
+
     return Scaffold(
       body: IndexedStack(
-        index: _currentIndex,
+        index: _currentIndex > 2 ? _currentIndex - 1 : _currentIndex,
         children: const [
           _HomeTab(),
           HealthTrackingScreen(),
@@ -42,9 +99,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
+          if (index == 2) {
+            _showQuickCheckIn();
+          } else {
+            setState(() {
+              _currentIndex = index;
+            });
+          }
         },
         type: BottomNavigationBarType.fixed,
         selectedItemColor: AppColors.primary,
@@ -57,23 +118,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
           fontSize: 12.sp,
           fontWeight: FontWeight.w400,
         ),
-        items: const [
-          BottomNavigationBarItem(
+        items: [
+          const BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),
             activeIcon: Icon(Icons.home),
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.favorite_outline),
-            activeIcon: Icon(Icons.favorite),
-            label: 'Health',
+            icon: const Icon(Icons.favorite_outline),
+            activeIcon: const Icon(Icons.favorite),
+            label: isGroupA ? 'Full Log' : 'Health',
           ),
           BottomNavigationBarItem(
+            icon: Container(
+              padding: EdgeInsets.all(4.w),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(isGroupA ? 1.0 : 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.add,
+                color: isGroupA ? Colors.white : AppColors.primary,
+                size: 24.sp,
+              ),
+            ),
+            label: 'Check-In',
+          ),
+          const BottomNavigationBarItem(
             icon: Icon(Icons.people_outline),
             activeIcon: Icon(Icons.people),
             label: 'Community',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
             activeIcon: Icon(Icons.person),
             label: 'Profile',
@@ -200,6 +276,84 @@ class _HomeTab extends StatelessWidget {
                   SizedBox(height: 24.h),
                 ],
                 
+                // Daily Pulse / Quick Check-In Card
+                Consumer<QuickCheckInProvider>(
+                  builder: (context, quickProvider, child) {
+                    final metric = quickProvider.selectedMetric;
+                    if (metric == null) return const SizedBox.shrink();
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Daily Pulse',
+                          style: TextStyle(
+                            fontSize: 20.sp,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        SizedBox(height: 16.h),
+                        Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.all(20.w),
+                          decoration: BoxDecoration(
+                            color: metric.color.withOpacity(0.05),
+                            borderRadius: BorderRadius.circular(16.r),
+                            border: Border.all(color: metric.color.withOpacity(0.2)),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: EdgeInsets.all(12.w),
+                                decoration: BoxDecoration(
+                                  color: metric.color.withOpacity(0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(metric.icon, color: metric.color, size: 28.sp),
+                              ),
+                              SizedBox(width: 16.w),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Quick Check-In',
+                                      style: TextStyle(
+                                        fontSize: 14.sp,
+                                        fontWeight: FontWeight.w500,
+                                        color: metric.color,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Log your ${quickProvider.selectedCondition?.name ?? "health"}',
+                                      style: TextStyle(
+                                        fontSize: 16.sp,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.textPrimary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              ElevatedButton(
+                                onPressed: () => QuickCheckInModal.show(context),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: metric.color,
+                                  minimumSize: Size(80.w, 36.h),
+                                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                                ),
+                                child: const Text('Start'),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 32.h),
+                      ],
+                    );
+                  },
+                ),
+
                 // Quick Actions
                 Text(
                   'Quick Actions',
@@ -225,7 +379,12 @@ class _HomeTab extends StatelessWidget {
                       subtitle: 'Track symptoms, vitals',
                       color: AppColors.secondary,
                       onTap: () {
-                        // TODO: Navigate to health logging
+                        if (user?.preferredLoggingMode == 'quick') {
+                          QuickCheckInModal.show(context);
+                        } else {
+                          // Standard multi-metric logging
+                          // context.push('/health/add-entry'); 
+                        }
                       },
                     ),
                     _QuickActionCard(

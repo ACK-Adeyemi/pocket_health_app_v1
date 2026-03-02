@@ -53,6 +53,9 @@ class UserProvider extends ChangeNotifier {
         return false;
       }
 
+      // Assign A/B test group randomly (A = Quick emphasis, B = Classic emphasis)
+      final abGroup = DateTime.now().millisecond % 2 == 0 ? 'A' : 'B';
+
       final userProfile = UserProfile(
         uid: user.uid,
         email: user.email!,
@@ -65,6 +68,8 @@ class UserProvider extends ChangeNotifier {
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
         hasCompletedOnboarding: false,
+        abTestGroup: abGroup,
+        preferredLoggingMode: 'quick', // Default to quick for all new users to measure adoption
       );
 
       await _firestore
@@ -212,6 +217,13 @@ class UserProvider extends ChangeNotifier {
 
       if (doc.exists) {
         _userProfile = UserProfile.fromMap(doc.data()!);
+
+        // Assign A/B test group for existing users if not already assigned
+        if (_userProfile?.abTestGroup == null) {
+          final abGroup = DateTime.now().millisecond % 2 == 0 ? 'A' : 'B';
+          await updateABTestGroup(abGroup);
+        }
+
         _setLoading(false);
         return ProfileLoadResult.success;
       } else {
@@ -230,6 +242,66 @@ class UserProvider extends ChangeNotifier {
   Future<bool> loadUserProfileLegacy() async {
     final result = await loadUserProfile();
     return result == ProfileLoadResult.success;
+  }
+
+  Future<bool> updateABTestGroup(String group) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return false;
+
+      await _firestore.collection('users').doc(user.uid).update({
+        'abTestGroup': group,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      
+      if (_userProfile != null) {
+        _userProfile = _userProfile!.copyWith(abTestGroup: group);
+        notifyListeners();
+      }
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> updatePreferredLoggingMode(String mode) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return false;
+
+      await _firestore.collection('users').doc(user.uid).update({
+        'preferredLoggingMode': mode,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      
+      if (_userProfile != null) {
+        _userProfile = _userProfile!.copyWith(preferredLoggingMode: mode);
+        notifyListeners();
+      }
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> markQuickCheckInOnboardingAsSeen() async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return false;
+
+      await _firestore.collection('users').doc(user.uid).update({
+        'hasSeenQuickCheckInOnboarding': true,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      
+      if (_userProfile != null) {
+        _userProfile = _userProfile!.copyWith(hasSeenQuickCheckInOnboarding: true);
+        notifyListeners();
+      }
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
   Future<bool> updateUserProfile({

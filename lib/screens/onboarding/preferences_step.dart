@@ -24,6 +24,7 @@ class _PreferencesStepState extends State<PreferencesStep> {
   bool _dataSharing = false;
   String _preferredLanguage = 'English';
   String _theme = 'System';
+  String _loggingMode = 'quick';
 
   @override
   Widget build(BuildContext context) {
@@ -122,6 +123,87 @@ class _PreferencesStepState extends State<PreferencesStep> {
                     },
                   ),
                   
+                  SizedBox(height: 32.h),
+
+                  // Health Tracking Section
+                  _SectionHeader(
+                    icon: Icons.speed_outlined,
+                    title: 'Health Tracking',
+                    subtitle: 'Choose how you want to log your data',
+                  ),
+                  SizedBox(height: 16.h),
+                  
+                  Container(
+                    padding: EdgeInsets.all(16.w),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12.r),
+                      border: Border.all(color: AppColors.grey200),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Logging Style',
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        SizedBox(height: 8.h),
+                        DropdownButtonFormField<String>(
+                          value: _loggingMode,
+                          items: const [
+                            DropdownMenuItem(
+                              value: 'quick', 
+                              child: Text('Quick Check-In (Fastest)'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'classic', 
+                              child: Text('Detailed Log (Comprehensive)'),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            setState(() {
+                              _loggingMode = value!;
+                            });
+                            // Save preference
+                            Provider.of<UserProvider>(context, listen: false)
+                                .updatePreferredLoggingMode(value!);
+                          },
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: AppColors.grey50,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8.r),
+                              borderSide: BorderSide(color: AppColors.grey300),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8.r),
+                              borderSide: BorderSide(color: AppColors.grey300),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8.r),
+                              borderSide: BorderSide(color: AppColors.primary, width: 2),
+                            ),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 16.w,
+                              vertical: 12.h,
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 8.h),
+                        Text(
+                          _loggingMode == 'quick' 
+                            ? 'One simple question per day. Optimized for consistency.' 
+                            : 'Log multiple symptoms and vitals at once. Optimized for detail.',
+                          style: TextStyle(fontSize: 12.sp, color: AppColors.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+
                   SizedBox(height: 32.h),
                   
                   // App Settings Section
