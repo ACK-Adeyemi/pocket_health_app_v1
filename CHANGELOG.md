@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Profile Role Visibility**: Display user role (Admin/Moderator) on the profile page for elevated accounts.
 - **Community Forum System**: Complete implementation of user community features
   - Groups auto-generated from health condition categories
   - Thread creation, editing, and archiving

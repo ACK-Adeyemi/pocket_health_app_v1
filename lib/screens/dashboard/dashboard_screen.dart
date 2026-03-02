@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/quick_check_in_provider.dart';
+import '../../models/user_profile.dart';
 import '../../utils/app_colors.dart';
 import '../health/health_tracking_screen.dart';
 import '../community/community_screen.dart';
@@ -541,6 +542,42 @@ class _ProfileTab extends StatelessWidget {
                       color: AppColors.textSecondary,
                     ),
                   ),
+                  if (user.role == UserRole.admin || user.role == UserRole.moderator) ...[
+                    SizedBox(height: 12.h),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+                      decoration: BoxDecoration(
+                        color: user.role == UserRole.admin 
+                            ? AppColors.accent.withOpacity(0.1) 
+                            : AppColors.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12.r),
+                        border: Border.all(
+                          color: user.role == UserRole.admin 
+                              ? AppColors.accent 
+                              : AppColors.primary,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            user.role == UserRole.admin ? Icons.admin_panel_settings : Icons.verified_user,
+                            size: 14.sp,
+                            color: user.role == UserRole.admin ? AppColors.accentDark : AppColors.primary,
+                          ),
+                          SizedBox(width: 4.w),
+                          Text(
+                            user.role.value.toUpperCase(),
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.bold,
+                              color: user.role == UserRole.admin ? AppColors.accentDark : AppColors.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                   SizedBox(height: 32.h),
                 ],
                 
