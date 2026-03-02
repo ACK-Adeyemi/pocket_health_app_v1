@@ -5,14 +5,42 @@ import '../models/health_entry.dart';
 import 'health_tracking_provider.dart';
 import 'user_provider.dart';
 
-class QuickCheckInProvider with ChangeNotifier {
-  final UserProvider userProvider;
-  final HealthTrackingProvider healthProvider;
+class QuickCheckInProvider extends ChangeNotifier {
+  UserProvider userProvider;
+  HealthTrackingProvider healthProvider;
 
   QuickCheckInProvider({
     required this.userProvider,
     required this.healthProvider,
   });
+
+  bool _disposed = false;
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  @override
+  void notifyListeners() {
+    if (!_disposed) {
+      super.notifyListeners();
+    }
+  }
+
+  void updateDependencies({
+    required UserProvider userProvider,
+    required HealthTrackingProvider healthProvider,
+  }) {
+    this.userProvider = userProvider;
+    this.healthProvider = healthProvider;
+    
+    // Auto-prepare if we have data but no selection, but DON'T clear if we already have one
+    if (_selectedCondition == null && userProvider.userProfile != null) {
+      prepareCheckIn();
+    }
+  }
 
   HealthCondition? _selectedCondition;
   HealthMetric? _selectedMetric;
@@ -27,7 +55,12 @@ class QuickCheckInProvider with ChangeNotifier {
   /// 1. Find conditions not logged today.
   /// 2. If all logged, pick the oldest one.
   /// 3. For the picked condition, select the primary "Quick" metric.
-  void prepareCheckIn() {
+  void prepareCheckIn({bool force = false}) {
+    // If not forced and we already have a selection, don't change it to avoid UI flashes
+    if (!force && _selectedCondition != null && _selectedMetric != null) {
+      return;
+    }
+
     final conditions = userProvider.userProfile?.healthConditions ?? [];
     if (conditions.isEmpty) {
       _selectedCondition = null;
@@ -98,35 +131,43 @@ class QuickCheckInProvider with ChangeNotifier {
   }
 
   Future<bool> submitCheckIn(dynamic value) async {
-    if (_selectedCondition == null || _selectedMetric == null) return false;
+    if (_selectedCondition == null || _selectedMetric == null || _disposed) return false;
 
     _isSaving = true;
     notifyListeners();
 
-    final entry = HealthEntry(
-      id: '',
-      userId: userProvider.userProfile!.uid,
-      conditionId: _selectedCondition!.id,
-      metricId: _selectedMetric!.id,
-      value: value,
-      timestamp: DateTime.now(),
-      source: 'quick',
-    );
+    try {
+      final entry = HealthEntry(
+        id: '',
+        userId: userProvider.userProfile!.uid,
+        conditionId: _selectedCondition!.id,
+        metricId: _selectedMetric!.id,
+        value: value,
+        timestamp: DateTime.now(),
+        source: 'quick',
+      );
 
-    final success = await healthProvider.addHealthEntry(entry);
-    
-    // Log analytics (Mock)
-    if (success) {
-      _logAnalyticsEvent('check_in_completed', {
-        'mode': 'quick',
-        'condition_id': _selectedCondition!.id,
-        'metric_id': _selectedMetric!.id,
-      });
+      final success = await healthProvider.addHealthEntry(entry);
+      
+      if (!_disposed) {
+        _isSaving = false;
+        if (success) {
+          _logAnalyticsEvent('check_in_completed', {
+            'mode': 'quick',
+            'condition_id': _selectedCondition!.id,
+            'metric_id': _selectedMetric!.id,
+          });
+        }
+        notifyListeners();
+      }
+      return success;
+    } catch (e) {
+      if (!_disposed) {
+        _isSaving = false;
+        notifyListeners();
+      }
+      return false;
     }
-
-    _isSaving = false;
-    notifyListeners();
-    return success;
   }
 
   void _logAnalyticsEvent(String name, Map<String, dynamic> params) {

@@ -15,6 +15,21 @@ class UserProvider extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   
+  bool _disposed = false;
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  @override
+  void notifyListeners() {
+    if (!_disposed) {
+      super.notifyListeners();
+    }
+  }
+
   UserProfile? _userProfile;
   bool _isLoading = false;
   String? _errorMessage;
@@ -26,12 +41,12 @@ class UserProvider extends ChangeNotifier {
 
   void _setLoading(bool loading) {
     _isLoading = loading;
-    notifyListeners();
+    if (!_disposed) notifyListeners();
   }
 
   void _setError(String? error) {
     _errorMessage = error;
-    notifyListeners();
+    if (!_disposed) notifyListeners();
   }
 
   Future<bool> createUserProfile({
@@ -77,12 +92,16 @@ class UserProvider extends ChangeNotifier {
           .doc(user.uid)
           .set(userProfile.toMap());
 
-      _userProfile = userProfile;
-      _setLoading(false);
+      if (!_disposed) {
+        _userProfile = userProfile;
+        _setLoading(false);
+      }
       return true;
     } catch (e) {
-      _setLoading(false);
-      _setError('Failed to create user profile: ${e.toString()}');
+      if (!_disposed) {
+        _setLoading(false);
+        _setError('Failed to create user profile: ${e.toString()}');
+      }
       return false;
     }
   }
@@ -112,11 +131,13 @@ class UserProvider extends ChangeNotifier {
       // Reload the user profile to get the updated timestamp from Firestore
       await loadUserProfile();
 
-      _setLoading(false);
+      if (!_disposed) _setLoading(false);
       return true;
     } catch (e) {
-      _setLoading(false);
-      _setError('Failed to update health conditions: ${e.toString()}');
+      if (!_disposed) {
+        _setLoading(false);
+        _setError('Failed to update health conditions: ${e.toString()}');
+      }
       return false;
     }
   }
@@ -156,11 +177,13 @@ class UserProvider extends ChangeNotifier {
       // Reload the user profile to get the updated timestamp from Firestore
       await loadUserProfile();
 
-      _setLoading(false);
+      if (!_disposed) _setLoading(false);
       return true;
     } catch (e) {
-      _setLoading(false);
-      _setError('Failed to update GP details: ${e.toString()}');
+      if (!_disposed) {
+        _setLoading(false);
+        _setError('Failed to update GP details: ${e.toString()}');
+      }
       return false;
     }
   }
@@ -188,11 +211,13 @@ class UserProvider extends ChangeNotifier {
       // Reload the user profile to get the updated timestamp from Firestore
       await loadUserProfile();
 
-      _setLoading(false);
+      if (!_disposed) _setLoading(false);
       return true;
     } catch (e) {
-      _setLoading(false);
-      _setError('Failed to complete onboarding: ${e.toString()}');
+      if (!_disposed) {
+        _setLoading(false);
+        _setError('Failed to complete onboarding: ${e.toString()}');
+      }
       return false;
     }
   }
@@ -216,24 +241,32 @@ class UserProvider extends ChangeNotifier {
           .get();
 
       if (doc.exists) {
-        _userProfile = UserProfile.fromMap(doc.data()!);
+        final profile = UserProfile.fromMap(doc.data()!);
+        
+        if (!_disposed) {
+          _userProfile = profile;
+        }
 
         // Assign A/B test group for existing users if not already assigned
-        if (_userProfile?.abTestGroup == null) {
+        if (profile.abTestGroup == null) {
           final abGroup = DateTime.now().millisecond % 2 == 0 ? 'A' : 'B';
           await updateABTestGroup(abGroup);
         }
 
-        _setLoading(false);
+        if (!_disposed) _setLoading(false);
         return ProfileLoadResult.success;
       } else {
-        _userProfile = null;
-        _setLoading(false);
+        if (!_disposed) {
+          _userProfile = null;
+          _setLoading(false);
+        }
         return ProfileLoadResult.notFound;
       }
     } catch (e) {
-      _setLoading(false);
-      _setError('Failed to load user profile: ${e.toString()}');
+      if (!_disposed) {
+        _setLoading(false);
+        _setError('Failed to load user profile: ${e.toString()}');
+      }
       return ProfileLoadResult.error;
     }
   }
@@ -254,7 +287,7 @@ class UserProvider extends ChangeNotifier {
         'updatedAt': FieldValue.serverTimestamp(),
       });
       
-      if (_userProfile != null) {
+      if (_userProfile != null && !_disposed) {
         _userProfile = _userProfile!.copyWith(abTestGroup: group);
         notifyListeners();
       }
@@ -274,7 +307,7 @@ class UserProvider extends ChangeNotifier {
         'updatedAt': FieldValue.serverTimestamp(),
       });
       
-      if (_userProfile != null) {
+      if (_userProfile != null && !_disposed) {
         _userProfile = _userProfile!.copyWith(preferredLoggingMode: mode);
         notifyListeners();
       }
@@ -294,7 +327,7 @@ class UserProvider extends ChangeNotifier {
         'updatedAt': FieldValue.serverTimestamp(),
       });
       
-      if (_userProfile != null) {
+      if (_userProfile != null && !_disposed) {
         _userProfile = _userProfile!.copyWith(hasSeenQuickCheckInOnboarding: true);
         notifyListeners();
       }
@@ -342,11 +375,13 @@ class UserProvider extends ChangeNotifier {
       // Reload the user profile to get the updated timestamp from Firestore
       await loadUserProfile();
 
-      _setLoading(false);
+      if (!_disposed) _setLoading(false);
       return true;
     } catch (e) {
-      _setLoading(false);
-      _setError('Failed to update user profile: ${e.toString()}');
+      if (!_disposed) {
+        _setLoading(false);
+        _setError('Failed to update user profile: ${e.toString()}');
+      }
       return false;
     }
   }

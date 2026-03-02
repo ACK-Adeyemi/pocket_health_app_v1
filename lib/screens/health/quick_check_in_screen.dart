@@ -57,6 +57,11 @@ class _QuickCheckInModalState extends State<QuickCheckInModal> {
         final condition = provider.selectedCondition;
         final metric = provider.selectedMetric;
 
+        // While saving, show loading state to prevent "Empty state" flash
+        if (provider.isSaving) {
+          return _buildLoadingState();
+        }
+
         if (condition == null || metric == null) {
           return _buildEmptyState();
         }
@@ -175,13 +180,7 @@ class _QuickCheckInModalState extends State<QuickCheckInModal> {
                         backgroundColor: metric.color,
                         padding: EdgeInsets.symmetric(vertical: 16.h),
                       ),
-                      child: provider.isSaving 
-                        ? SizedBox(
-                            height: 20.h,
-                            width: 20.h,
-                            child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                          )
-                        : const Text('Log Entry'),
+                      child: const Text('Log Entry'),
                     ),
                   ),
                 ],
@@ -292,6 +291,19 @@ class _QuickCheckInModalState extends State<QuickCheckInModal> {
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return Container(
+      height: 300.h,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
+      child: const Center(
+        child: CircularProgressIndicator(),
+      ),
     );
   }
 

@@ -7,6 +7,21 @@ import '../models/health_entry.dart';
 class HealthTrackingProvider with ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   
+  bool _disposed = false;
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  @override
+  void notifyListeners() {
+    if (!_disposed) {
+      super.notifyListeners();
+    }
+  }
+
   List<HealthCondition> _userConditions = [];
   List<HealthEntry> _recentEntries = [];
   Map<String, List<HealthEntry>> _entriesByCondition = {};
@@ -41,13 +56,15 @@ class HealthTrackingProvider with ChangeNotifier {
 
       if (checkSnapshot.docs.isEmpty) {
         // No entries exist yet - this is normal for new users
-        _recentEntries = [];
-        _entriesByCondition.clear();
-        notifyListeners();
+        if (!_disposed) {
+          _recentEntries = [];
+          _entriesByCondition.clear();
+          notifyListeners();
+        }
         return;
       }
 
-      // Load all entries for the user (avoiding composite index)
+      // Load all entries for the user
       final allEntriesSnapshot = await _firestore
           .collection('health_entries')
           .where('userId', isEqualTo: userId)
@@ -60,21 +77,26 @@ class HealthTrackingProvider with ChangeNotifier {
 
       // Sort by timestamp descending and take first 100 (in-memory sorting)
       allEntries.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-      _recentEntries = allEntries.take(100).toList();
+      
+      if (!_disposed) {
+        _recentEntries = allEntries.take(100).toList();
 
-      // Group entries by condition
-      _entriesByCondition.clear();
-      for (final entry in _recentEntries) {
-        if (!_entriesByCondition.containsKey(entry.conditionId)) {
-          _entriesByCondition[entry.conditionId] = [];
+        // Group entries by condition
+        _entriesByCondition.clear();
+        for (final entry in _recentEntries) {
+          if (!_entriesByCondition.containsKey(entry.conditionId)) {
+            _entriesByCondition[entry.conditionId] = [];
+          }
+          _entriesByCondition[entry.conditionId]!.add(entry);
         }
-        _entriesByCondition[entry.conditionId]!.add(entry);
-      }
 
-      notifyListeners();
+        notifyListeners();
+      }
     } catch (e) {
-      _error = 'Failed to load health entries: ${e.toString()}';
-      notifyListeners();
+      if (!_disposed) {
+        _error = 'Failed to load health entries: ${e.toString()}';
+        notifyListeners();
+      }
     } finally {
       _setLoading(false);
     }
@@ -88,20 +110,24 @@ class HealthTrackingProvider with ChangeNotifier {
     try {
       final docRef = await _firestore.collection('health_entries').add(entry.toMap());
       
-      // Add to local lists
-      final newEntry = entry.copyWith(id: docRef.id);
-      _recentEntries.insert(0, newEntry);
-      
-      if (!_entriesByCondition.containsKey(entry.conditionId)) {
-        _entriesByCondition[entry.conditionId] = [];
-      }
-      _entriesByCondition[entry.conditionId]!.insert(0, newEntry);
+      if (!_disposed) {
+        // Add to local lists
+        final newEntry = entry.copyWith(id: docRef.id);
+        _recentEntries.insert(0, newEntry);
+        
+        if (!_entriesByCondition.containsKey(entry.conditionId)) {
+          _entriesByCondition[entry.conditionId] = [];
+        }
+        _entriesByCondition[entry.conditionId]!.insert(0, newEntry);
 
-      notifyListeners();
+        notifyListeners();
+      }
       return true;
     } catch (e) {
-      _error = 'Failed to save health entry: ${e.toString()}';
-      notifyListeners();
+      if (!_disposed) {
+        _error = 'Failed to save health entry: ${e.toString()}';
+        notifyListeners();
+      }
       return false;
     } finally {
       _setLoading(false);
@@ -126,21 +152,25 @@ class HealthTrackingProvider with ChangeNotifier {
 
       await batch.commit();
 
-      // Add to local lists
-      for (final entry in savedEntries) {
-        _recentEntries.insert(0, entry);
-        
-        if (!_entriesByCondition.containsKey(entry.conditionId)) {
-          _entriesByCondition[entry.conditionId] = [];
+      if (!_disposed) {
+        // Add to local lists
+        for (final entry in savedEntries) {
+          _recentEntries.insert(0, entry);
+          
+          if (!_entriesByCondition.containsKey(entry.conditionId)) {
+            _entriesByCondition[entry.conditionId] = [];
+          }
+          _entriesByCondition[entry.conditionId]!.insert(0, entry);
         }
-        _entriesByCondition[entry.conditionId]!.insert(0, entry);
-      }
 
-      notifyListeners();
+        notifyListeners();
+      }
       return true;
     } catch (e) {
-      _error = 'Failed to save health entries: ${e.toString()}';
-      notifyListeners();
+      if (!_disposed) {
+        _error = 'Failed to save health entries: ${e.toString()}';
+        notifyListeners();
+      }
       return false;
     } finally {
       _setLoading(false);
@@ -216,18 +246,22 @@ class HealthTrackingProvider with ChangeNotifier {
     try {
       await _firestore.collection('health_entries').doc(entryId).delete();
       
-      // Remove from local lists
-      _recentEntries.removeWhere((entry) => entry.id == entryId);
-      
-      for (final conditionEntries in _entriesByCondition.values) {
-        conditionEntries.removeWhere((entry) => entry.id == entryId);
-      }
+      if (!_disposed) {
+        // Remove from local lists
+        _recentEntries.removeWhere((entry) => entry.id == entryId);
+        
+        for (final conditionEntries in _entriesByCondition.values) {
+          conditionEntries.removeWhere((entry) => entry.id == entryId);
+        }
 
-      notifyListeners();
+        notifyListeners();
+      }
       return true;
     } catch (e) {
-      _error = 'Failed to delete health entry: ${e.toString()}';
-      notifyListeners();
+      if (!_disposed) {
+        _error = 'Failed to delete health entry: ${e.toString()}';
+        notifyListeners();
+      }
       return false;
     } finally {
       _setLoading(false);
@@ -257,7 +291,7 @@ class HealthTrackingProvider with ChangeNotifier {
   // Private helper methods
   void _setLoading(bool loading) {
     _isLoading = loading;
-    notifyListeners();
+    if (!_disposed) notifyListeners();
   }
 
   // Get metrics for a condition

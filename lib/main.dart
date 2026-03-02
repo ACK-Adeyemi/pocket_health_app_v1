@@ -41,11 +41,17 @@ class PocketHealthApp extends StatelessWidget {
             userProvider: Provider.of<UserProvider>(context, listen: false),
             healthProvider: Provider.of<HealthTrackingProvider>(context, listen: false),
           ),
-          update: (context, userProvider, healthProvider, previous) => 
-            QuickCheckInProvider(
+          update: (context, userProvider, healthProvider, previous) {
+            final provider = previous ?? QuickCheckInProvider(
               userProvider: userProvider,
               healthProvider: healthProvider,
-            ),
+            );
+            provider.updateDependencies(
+              userProvider: userProvider,
+              healthProvider: healthProvider,
+            );
+            return provider;
+          },
         ),
       ],
       child: ScreenUtilInit(
