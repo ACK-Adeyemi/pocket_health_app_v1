@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import '../../providers/community_provider.dart';
+import '../../providers/user_provider.dart';
 import '../../models/group.dart';
 import '../../models/thread.dart';
 import '../../utils/app_colors.dart';
@@ -24,13 +26,23 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
     _loadThreads();
   }
 
-  Future<void> _loadThreads() async {
+  Future<void> _loadThreads({Source source = Source.serverAndCache}) async {
     final communityProvider = Provider.of<CommunityProvider>(context, listen: false);
-    await communityProvider.loadThreadsForGroup(widget.group.id);
+    await communityProvider.loadThreadsForGroup(widget.group.id, source: source);
   }
 
   @override
   Widget build(BuildContext context) {
+    // Sync UserProfile with CommunityProvider
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final communityProvider = Provider.of<CommunityProvider>(context, listen: false);
+      if (userProvider.userProfile != null && communityProvider.currentUser == null) {
+        communityProvider.setCurrentUser(userProvider.userProfile);
+        _loadThreads();
+      }
+    });
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -47,6 +59,24 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: AppColors.primary),
+            onPressed: () async {
+              final userProvider = Provider.of<UserProvider>(context, listen: false);
+              final communityProvider = Provider.of<CommunityProvider>(context, listen: false);
+              
+              if (userProvider.userProfile == null) {
+                await userProvider.loadUserProfile();
+              }
+              
+              if (userProvider.userProfile != null) {
+                communityProvider.setCurrentUser(userProvider.userProfile);
+                await _loadThreads(source: Source.server);
+              }
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -56,6 +86,10 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
               builder: (context, provider, child) {
                 if (provider.isLoading) {
                   return const Center(child: CircularProgressIndicator());
+                }
+
+                if (provider.errorMessage != null) {
+                  return _buildErrorState(provider);
                 }
 
                 if (provider.threads.isEmpty) {
@@ -223,9 +257,78 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
     );
   }
 
+  Widget _buildErrorState(CommunityProvider provider) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.error_outline,
+            size: 48.sp,
+            color: AppColors.error,
+          ),
+          SizedBox(height: 16.h),
+          Text(
+            'Error loading discussions',
+            style: TextStyle(
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 32.w),
+            child: Text(
+              provider.errorMessage!,
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: AppColors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          SizedBox(height: 24.h),
+          ElevatedButton(
+            onPressed: () async {
+              final userProvider = Provider.of<UserProvider>(context, listen: false);
+              provider.clearError();
+              
+              if (userProvider.userProfile == null) {
+                await userProvider.loadUserProfile();
+              }
+              
+              if (userProvider.userProfile != null) {
+                provider.setCurrentUser(userProvider.userProfile);
+                await _loadThreads(source: Source.server);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Retry'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildThreadList(List<Thread> threads) {
     return RefreshIndicator(
-      onRefresh: _loadThreads,
+      onRefresh: () async {
+        final userProvider = Provider.of<UserProvider>(context, listen: false);
+        final communityProvider = Provider.of<CommunityProvider>(context, listen: false);
+        
+        if (userProvider.userProfile == null) {
+          await userProvider.loadUserProfile();
+        }
+        
+        if (userProvider.userProfile != null) {
+          communityProvider.setCurrentUser(userProvider.userProfile);
+          await _loadThreads(source: Source.server);
+        }
+      },
       child: ListView.builder(
         padding: EdgeInsets.all(16.w),
         itemCount: threads.length,

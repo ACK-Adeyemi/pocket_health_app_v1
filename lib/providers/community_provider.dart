@@ -45,7 +45,8 @@ class CommunityProvider extends ChangeNotifier {
   }
 
   /// Set current user for role-based operations
-  void setCurrentUser(UserProfile user) {
+  void setCurrentUser(UserProfile? user) {
+    if (_currentUser?.uid == user?.uid && _currentUser?.role == user?.role) return;
     _currentUser = user;
     notifyListeners();
   }
@@ -78,9 +79,9 @@ class CommunityProvider extends ChangeNotifier {
   }
 
   /// Load all available groups
-  Future<void> _loadGroups() async {
+  Future<void> _loadGroups({Source source = Source.serverAndCache}) async {
     try {
-      final snapshot = await _firestore.collection('groups').get();
+      final snapshot = await _firestore.collection('groups').get(GetOptions(source: source));
       _groups = snapshot.docs.map((doc) => Group.fromMap(doc.data() as Map<String, dynamic>)).toList();
       notifyListeners();
     } catch (e) {
@@ -89,8 +90,11 @@ class CommunityProvider extends ChangeNotifier {
   }
 
   /// Load groups accessible to current user based on their health conditions
-  Future<void> loadUserGroups() async {
-    if (_currentUser == null) return;
+  Future<void> loadUserGroups({Source source = Source.serverAndCache}) async {
+    if (_currentUser == null) {
+      _setError('User not authenticated');
+      return;
+    }
 
     try {
       _setLoading(true);
@@ -104,7 +108,7 @@ class CommunityProvider extends ChangeNotifier {
       final snapshot = await _firestore
           .collection('groups')
           .where('isActive', isEqualTo: true)
-          .get();
+          .get(GetOptions(source: source));
 
       _groups = snapshot.docs
           .map((doc) => Group.fromMap(doc.data() as Map<String, dynamic>))
@@ -123,7 +127,7 @@ class CommunityProvider extends ChangeNotifier {
   }
 
   /// Load threads for a specific group
-  Future<void> loadThreadsForGroup(String groupId) async {
+  Future<void> loadThreadsForGroup(String groupId, {Source source = Source.serverAndCache}) async {
     try {
       _setLoading(true);
 
@@ -134,14 +138,14 @@ class CommunityProvider extends ChangeNotifier {
           .where('isArchived', isEqualTo: false)
           .orderBy('lastActivityAt', descending: true)
           .limit(50)
-          .get();
+          .get(GetOptions(source: source));
 
       if (snapshot.docs.isEmpty) {
         // Fallback for cases where index isn't ready or fields are missing
         final simpleSnapshot = await _firestore
             .collection('threads')
             .where('groupId', isEqualTo: groupId)
-            .get();
+            .get(GetOptions(source: source));
         
         _threads = simpleSnapshot.docs
             .map((doc) => Thread.fromMap(doc.data()))
@@ -162,7 +166,7 @@ class CommunityProvider extends ChangeNotifier {
   }
 
   /// Load comments for a specific thread
-  Future<void> loadCommentsForThread(String threadId) async {
+  Future<void> loadCommentsForThread(String threadId, {Source source = Source.serverAndCache}) async {
     try {
       _setLoading(true);
 
@@ -171,7 +175,7 @@ class CommunityProvider extends ChangeNotifier {
           .where('threadId', isEqualTo: threadId)
           .where('isDeleted', isEqualTo: false)
           .orderBy('createdAt', descending: false)
-          .get();
+          .get(GetOptions(source: source));
 
       _comments = snapshot.docs
           .map((doc) => Comment.fromMap(doc.data() as Map<String, dynamic>))
@@ -374,27 +378,35 @@ class CommunityProvider extends ChangeNotifier {
   }
 
   /// Load reports for moderators
-  Future<void> _loadReportsIfModerator() async {
+  Future<void> refreshReports({Source source = Source.server}) async {
     if (_currentUser == null ||
         (_currentUser!.role != UserRole.moderator && _currentUser!.role != UserRole.admin)) {
       return;
     }
 
     try {
+      _setLoading(true);
       final snapshot = await _firestore
           .collection('reports')
           .where('status', isEqualTo: ReportStatus.pending.name)
           .orderBy('createdAt', descending: true)
-          .get();
+          .get(GetOptions(source: source));
 
       _reports = snapshot.docs
           .map((doc) => Report.fromMap(doc.data() as Map<String, dynamic>))
           .toList();
 
+      _setLoading(false);
       notifyListeners();
     } catch (e) {
+      _setLoading(false);
       _setError('Failed to load reports: ${e.toString()}');
     }
+  }
+
+  /// Internal helper for initial load
+  Future<void> _loadReportsIfModerator() async {
+    await refreshReports();
   }
 
   /// Helper method to update group thread count

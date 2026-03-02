@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import '../../providers/community_provider.dart';
+import '../../providers/user_provider.dart';
 import '../../models/thread.dart';
 import '../../models/comment.dart';
 import '../../models/report.dart';
@@ -34,9 +36,9 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
     super.dispose();
   }
 
-  Future<void> _loadComments() async {
+  Future<void> _loadComments({Source source = Source.serverAndCache}) async {
     final communityProvider = Provider.of<CommunityProvider>(context, listen: false);
-    await communityProvider.loadCommentsForThread(widget.thread.id);
+    await communityProvider.loadCommentsForThread(widget.thread.id, source: source);
   }
 
   Future<void> _submitComment() async {
@@ -60,6 +62,16 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Sync UserProfile with CommunityProvider
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final communityProvider = Provider.of<CommunityProvider>(context, listen: false);
+      if (userProvider.userProfile != null && communityProvider.currentUser == null) {
+        communityProvider.setCurrentUser(userProvider.userProfile);
+        _loadComments();
+      }
+    });
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -77,6 +89,22 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: AppColors.primary),
+            onPressed: () async {
+              final userProvider = Provider.of<UserProvider>(context, listen: false);
+              final communityProvider = Provider.of<CommunityProvider>(context, listen: false);
+              
+              if (userProvider.userProfile == null) {
+                await userProvider.loadUserProfile();
+              }
+              
+              if (userProvider.userProfile != null) {
+                communityProvider.setCurrentUser(userProvider.userProfile);
+                await _loadComments(source: Source.server);
+              }
+            },
+          ),
           Consumer<CommunityProvider>(
             builder: (context, provider, child) {
               final user = provider.currentUser;
@@ -119,8 +147,28 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
           Expanded(
             child: Consumer<CommunityProvider>(
               builder: (context, provider, child) {
+                if (provider.isLoading && provider.comments.isEmpty) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (provider.errorMessage != null) {
+                  return _buildErrorState(provider);
+                }
+
                 return RefreshIndicator(
-                  onRefresh: _loadComments,
+                  onRefresh: () async {
+                    final userProvider = Provider.of<UserProvider>(context, listen: false);
+                    final communityProvider = Provider.of<CommunityProvider>(context, listen: false);
+                    
+                    if (userProvider.userProfile == null) {
+                      await userProvider.loadUserProfile();
+                    }
+                    
+                    if (userProvider.userProfile != null) {
+                      communityProvider.setCurrentUser(userProvider.userProfile);
+                      await _loadComments(source: Source.server);
+                    }
+                  },
                   child: ListView(
                     padding: EdgeInsets.all(16.w),
                     children: [
@@ -451,6 +499,63 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
                 },
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(CommunityProvider provider) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.error_outline,
+            size: 48.sp,
+            color: AppColors.error,
+          ),
+          SizedBox(height: 16.h),
+          Text(
+            'Error loading discussion details',
+            style: TextStyle(
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 32.w),
+            child: Text(
+              provider.errorMessage!,
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: AppColors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          SizedBox(height: 24.h),
+          ElevatedButton(
+            onPressed: () async {
+              final userProvider = Provider.of<UserProvider>(context, listen: false);
+              provider.clearError();
+              
+              if (userProvider.userProfile == null) {
+                await userProvider.loadUserProfile();
+              }
+              
+              if (userProvider.userProfile != null) {
+                provider.setCurrentUser(userProvider.userProfile);
+                await _loadComments(source: Source.server);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Retry'),
           ),
         ],
       ),

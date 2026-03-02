@@ -42,7 +42,7 @@ class HealthTrackingProvider with ChangeNotifier {
   }
 
   // Load health entries for a user
-  Future<void> loadHealthEntries(String userId) async {
+  Future<void> loadHealthEntries(String userId, {Source source = Source.serverAndCache}) async {
     _setLoading(true);
     _error = null;
 
@@ -52,7 +52,7 @@ class HealthTrackingProvider with ChangeNotifier {
           .collection('health_entries')
           .where('userId', isEqualTo: userId)
           .limit(1)
-          .get();
+          .get(GetOptions(source: source));
 
       if (checkSnapshot.docs.isEmpty) {
         // No entries exist yet - this is normal for new users
@@ -68,7 +68,7 @@ class HealthTrackingProvider with ChangeNotifier {
       final allEntriesSnapshot = await _firestore
           .collection('health_entries')
           .where('userId', isEqualTo: userId)
-          .get();
+          .get(GetOptions(source: source));
 
       // Convert to HealthEntry objects
       final allEntries = allEntriesSnapshot.docs

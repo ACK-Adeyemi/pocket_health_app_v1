@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import '../../providers/health_tracking_provider.dart';
 import '../../providers/user_provider.dart';
@@ -25,7 +26,7 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
     });
   }
 
-  void _loadHealthData() {
+  void _loadHealthData({Source source = Source.serverAndCache}) {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final healthProvider = Provider.of<HealthTrackingProvider>(context, listen: false);
     
@@ -34,7 +35,7 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
       healthProvider.setUserConditions(userProvider.userProfile!.healthConditions);
       
       // Load health entries
-      healthProvider.loadHealthEntries(userProvider.userProfile!.uid);
+      healthProvider.loadHealthEntries(userProvider.userProfile!.uid, source: source);
     }
   }
 
@@ -55,7 +56,7 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
         elevation: 0,
         actions: [
           IconButton(
-            onPressed: _loadHealthData,
+            onPressed: () => _loadHealthData(source: Source.server),
             icon: Icon(
               Icons.refresh,
               color: AppColors.primary,
@@ -106,7 +107,7 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
                   ElevatedButton(
                     onPressed: () {
                       healthProvider.clearError();
-                      _loadHealthData();
+                      _loadHealthData(source: Source.server);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
@@ -124,7 +125,7 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
           }
 
           return RefreshIndicator(
-            onRefresh: () async => _loadHealthData(),
+            onRefresh: () async => _loadHealthData(source: Source.server),
             color: AppColors.primary,
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),

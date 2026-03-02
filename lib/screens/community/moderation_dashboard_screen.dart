@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import '../../providers/community_provider.dart';
+import '../../providers/user_provider.dart';
 import '../../models/report.dart';
 import '../../utils/app_colors.dart';
 
@@ -30,6 +32,16 @@ class _ModerationDashboardScreenState extends State<ModerationDashboardScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Sync UserProfile with CommunityProvider
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final communityProvider = Provider.of<CommunityProvider>(context, listen: false);
+      if (userProvider.userProfile != null && communityProvider.currentUser == null) {
+        communityProvider.setCurrentUser(userProvider.userProfile);
+        communityProvider.refreshReports();
+      }
+    });
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -46,6 +58,24 @@ class _ModerationDashboardScreenState extends State<ModerationDashboardScreen>
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: AppColors.primary),
+            onPressed: () async {
+              final userProvider = Provider.of<UserProvider>(context, listen: false);
+              final communityProvider = Provider.of<CommunityProvider>(context, listen: false);
+              
+              if (userProvider.userProfile == null) {
+                await userProvider.loadUserProfile();
+              }
+              
+              if (userProvider.userProfile != null) {
+                communityProvider.setCurrentUser(userProvider.userProfile);
+                await communityProvider.refreshReports(source: Source.server);
+              }
+            },
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           labelColor: AppColors.primary,
@@ -72,8 +102,12 @@ class _ModerationDashboardScreenState extends State<ModerationDashboardScreen>
   Widget _buildReportsTab() {
     return Consumer<CommunityProvider>(
       builder: (context, provider, child) {
-        if (provider.isLoading) {
+        if (provider.isLoading && provider.reports.isEmpty) {
           return const Center(child: CircularProgressIndicator());
+        }
+
+        if (provider.errorMessage != null) {
+          return _buildErrorState(provider);
         }
 
         final pendingReports = provider.reports
@@ -86,7 +120,17 @@ class _ModerationDashboardScreenState extends State<ModerationDashboardScreen>
 
         return RefreshIndicator(
           onRefresh: () async {
-            // TODO: Refresh reports
+            final userProvider = Provider.of<UserProvider>(context, listen: false);
+            final communityProvider = Provider.of<CommunityProvider>(context, listen: false);
+            
+            if (userProvider.userProfile == null) {
+              await userProvider.loadUserProfile();
+            }
+            
+            if (userProvider.userProfile != null) {
+              communityProvider.setCurrentUser(userProvider.userProfile);
+              await communityProvider.refreshReports(source: Source.server);
+            }
           },
           child: ListView.builder(
             padding: EdgeInsets.all(16.w),
@@ -675,6 +719,63 @@ class _ModerationDashboardScreenState extends State<ModerationDashboardScreen>
               // TODO: Update setting
             },
             activeColor: AppColors.primary,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(CommunityProvider provider) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.error_outline,
+            size: 48.sp,
+            color: AppColors.error,
+          ),
+          SizedBox(height: 16.h),
+          Text(
+            'Error loading reports',
+            style: TextStyle(
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 32.w),
+            child: Text(
+              provider.errorMessage!,
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: AppColors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          SizedBox(height: 24.h),
+          ElevatedButton(
+            onPressed: () async {
+              final userProvider = Provider.of<UserProvider>(context, listen: false);
+              provider.clearError();
+              
+              if (userProvider.userProfile == null) {
+                await userProvider.loadUserProfile();
+              }
+              
+              if (userProvider.userProfile != null) {
+                provider.setCurrentUser(userProvider.userProfile);
+                await provider.refreshReports(source: Source.server);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Retry'),
           ),
         ],
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import '../../providers/community_provider.dart';
 import '../../providers/user_provider.dart';
@@ -36,6 +37,16 @@ class _CommunityScreenState extends State<CommunityScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Sync UserProfile with CommunityProvider
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final communityProvider = Provider.of<CommunityProvider>(context, listen: false);
+      if (userProvider.userProfile != null && communityProvider.currentUser == null) {
+        communityProvider.setCurrentUser(userProvider.userProfile);
+        communityProvider.loadUserGroups();
+      }
+    });
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -49,6 +60,23 @@ class _CommunityScreenState extends State<CommunityScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: AppColors.primary),
+            onPressed: () async {
+              final userProvider = Provider.of<UserProvider>(context, listen: false);
+              final communityProvider = Provider.of<CommunityProvider>(context, listen: false);
+              
+              // Ensure we have the latest profile before refreshing
+              if (userProvider.userProfile == null) {
+                await userProvider.loadUserProfile();
+              }
+              
+              if (userProvider.userProfile != null) {
+                communityProvider.setCurrentUser(userProvider.userProfile);
+                await communityProvider.loadUserGroups(source: Source.server);
+              }
+            },
+          ),
           Consumer<CommunityProvider>(
             builder: (context, provider, child) {
               final user = provider.currentUser;
@@ -76,6 +104,10 @@ class _CommunityScreenState extends State<CommunityScreen> {
             return const Center(
               child: CircularProgressIndicator(),
             );
+          }
+
+          if (communityProvider.errorMessage != null) {
+            return _buildErrorState(communityProvider);
           }
 
           if (userProvider.userProfile == null) {
@@ -190,8 +222,17 @@ class _CommunityScreenState extends State<CommunityScreen> {
   Widget _buildGroupList(List<Group> groups) {
     return RefreshIndicator(
       onRefresh: () async {
+        final userProvider = Provider.of<UserProvider>(context, listen: false);
         final communityProvider = Provider.of<CommunityProvider>(context, listen: false);
-        await communityProvider.loadUserGroups();
+        
+        if (userProvider.userProfile == null) {
+          await userProvider.loadUserProfile();
+        }
+        
+        if (userProvider.userProfile != null) {
+          communityProvider.setCurrentUser(userProvider.userProfile);
+          await communityProvider.loadUserGroups(source: Source.server);
+        }
       },
       child: ListView.builder(
         padding: EdgeInsets.all(16.w),
@@ -320,6 +361,63 @@ class _CommunityScreenState extends State<CommunityScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildErrorState(CommunityProvider provider) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.error_outline,
+            size: 48.sp,
+            color: AppColors.error,
+          ),
+          SizedBox(height: 16.h),
+          Text(
+            'Error loading communities',
+            style: TextStyle(
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 32.w),
+            child: Text(
+              provider.errorMessage!,
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: AppColors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          SizedBox(height: 24.h),
+          ElevatedButton(
+            onPressed: () async {
+              final userProvider = Provider.of<UserProvider>(context, listen: false);
+              provider.clearError();
+              
+              if (userProvider.userProfile == null) {
+                await userProvider.loadUserProfile();
+              }
+              
+              if (userProvider.userProfile != null) {
+                provider.setCurrentUser(userProvider.userProfile);
+                await provider.loadUserGroups(source: Source.server);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Retry'),
+          ),
+        ],
+      ),
     );
   }
 
