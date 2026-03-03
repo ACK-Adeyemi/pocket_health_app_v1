@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import '../../providers/community_provider.dart';
 import '../../models/report.dart';
@@ -67,31 +68,30 @@ class _ReportDialogState extends State<ReportDialog> {
 
   @override
   Widget build(BuildContext context) {
-    // Use standard AlertDialog for better web compatibility
     return AlertDialog(
       titlePadding: EdgeInsets.zero,
-      contentPadding: const EdgeInsets.fromLTRB(24.0, 20.0, 24.0, 24.0),
+      contentPadding: EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 24.h),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.0),
+        borderRadius: BorderRadius.circular(16.r),
       ),
       title: Container(
-        padding: const EdgeInsets.all(16.0),
-        decoration: const BoxDecoration(
+        padding: EdgeInsets.all(16.w),
+        decoration: BoxDecoration(
           color: AppColors.error,
           borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(16.0),
-            topRight: Radius.circular(16.0),
+            topLeft: Radius.circular(16.r),
+            topRight: Radius.circular(16.r),
           ),
         ),
         child: Row(
           children: [
             const Icon(Icons.flag, color: Colors.white),
-            const SizedBox(width: 12.0),
+            SizedBox(width: 12.w),
             Expanded(
               child: Text(
                 'Report ${widget.contentType}',
-                style: const TextStyle(
-                  fontSize: 18.0,
+                style: TextStyle(
+                  fontSize: 18.sp,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
                 ),
@@ -104,28 +104,31 @@ class _ReportDialogState extends State<ReportDialog> {
           ],
         ),
       ),
-      content: SizedBox(
-        width: 500.0, // Fixed width for web/desktop
+      content: Container(
+        width: MediaQuery.of(context).size.width > 600 ? 500.0 : MediaQuery.of(context).size.width,
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Why are you reporting this?',
                 style: TextStyle(
-                  fontSize: 16.0,
+                  fontSize: 16.sp,
                   fontWeight: FontWeight.w600,
                   color: AppColors.textPrimary,
                 ),
               ),
-              const SizedBox(height: 12.0),
+              SizedBox(height: 12.h),
               ...ReportCategory.values.map((category) {
                 return RadioListTile<ReportCategory>(
-                  title: Text(category.displayName),
+                  title: Text(
+                    category.displayName,
+                    style: TextStyle(fontSize: 14.sp),
+                  ),
                   subtitle: Text(
                     category.description,
-                    style: const TextStyle(fontSize: 12.0),
+                    style: TextStyle(fontSize: 12.sp),
                   ),
                   value: category,
                   groupValue: _selectedCategory,
@@ -136,55 +139,61 @@ class _ReportDialogState extends State<ReportDialog> {
                   contentPadding: EdgeInsets.zero,
                 );
               }).toList(),
-              const SizedBox(height: 16.0),
-              const Text(
+              SizedBox(height: 16.h),
+              Text(
                 'Additional Details (Optional)',
                 style: TextStyle(
-                  fontSize: 14.0,
+                  fontSize: 14.sp,
                   fontWeight: FontWeight.w600,
                   color: AppColors.textPrimary,
                 ),
               ),
-              const SizedBox(height: 8.0),
+              SizedBox(height: 8.h),
               TextField(
                 controller: _descriptionController,
                 decoration: InputDecoration(
                   hintText: 'Provide more context...',
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.0),
+                    borderRadius: BorderRadius.circular(8.r),
                   ),
+                  contentPadding: EdgeInsets.all(12.w),
                 ),
                 maxLines: 3,
+                style: TextStyle(fontSize: 14.sp),
               ),
             ],
           ),
         ),
       ),
       actions: [
-        OutlinedButton(
-          onPressed: _isLoading ? null : () => Navigator.pop(context),
-          style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
-          ),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: _isLoading ? null : _submitReport,
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
-            backgroundColor: AppColors.error,
-            foregroundColor: Colors.white,
-          ),
-          child: _isLoading
-              ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                )
-              : const Text('Submit Report'),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            TextButton(
+              onPressed: _isLoading ? null : () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            SizedBox(width: 8.w),
+            ElevatedButton(
+              onPressed: _isLoading ? null : _submitReport,
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                backgroundColor: AppColors.error,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(0, 0),
+              ),
+              child: _isLoading
+                  ? SizedBox(
+                      height: 20.w,
+                      width: 20.w,
+                      child: const CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : const Text('Submit'),
+            ),
+          ],
         ),
       ],
     );

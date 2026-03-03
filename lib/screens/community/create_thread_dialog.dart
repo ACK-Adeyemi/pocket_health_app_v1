@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import '../../providers/community_provider.dart';
 import '../../models/group.dart';
@@ -94,7 +95,6 @@ class _CreateThreadDialogState extends State<CreateThreadDialog> {
 
   @override
   Widget build(BuildContext context) {
-    // Use standard AlertDialog for better web compatibility
     return AlertDialog(
       titlePadding: EdgeInsets.zero,
       contentPadding: const EdgeInsets.fromLTRB(24.0, 20.0, 24.0, 24.0),
@@ -131,8 +131,8 @@ class _CreateThreadDialogState extends State<CreateThreadDialog> {
           ],
         ),
       ),
-      content: SizedBox(
-        width: 500.0, // Fixed width for web/desktop
+      content: Container(
+        width: MediaQuery.of(context).size.width > 600 ? 500.0 : MediaQuery.of(context).size.width,
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -240,30 +240,33 @@ class _CreateThreadDialogState extends State<CreateThreadDialog> {
         ),
       ),
       actions: [
-        OutlinedButton(
-          onPressed: _isLoading ? null : () => Navigator.pop(context),
-          style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
-            side: const BorderSide(color: AppColors.primary),
-          ),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: _isLoading ? null : _createThread,
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
-            backgroundColor: AppColors.primary,
-          ),
-          child: _isLoading
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-              )
-            : const Text('Create Discussion'),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            TextButton(
+              onPressed: _isLoading ? null : () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            const SizedBox(width: 8.0),
+            ElevatedButton(
+              onPressed: _isLoading ? null : _createThread,
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                backgroundColor: AppColors.primary,
+                minimumSize: const Size(0, 0),
+              ),
+              child: _isLoading
+                ? SizedBox(
+                    width: 20.w,
+                    height: 20.w,
+                    child: const CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : const Text('Create'),
+            ),
+          ],
         ),
       ],
     );

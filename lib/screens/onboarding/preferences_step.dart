@@ -28,39 +28,39 @@ class _PreferencesStepState extends State<PreferencesStep> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 24.w),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(height: 32.h),
-          
-          // Title
-          Text(
-            'Preferences',
-            style: TextStyle(
-              fontSize: 28.sp,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          SizedBox(height: 8.h),
-          
-          Text(
-            'Customize your Pocket Health experience. You can change these settings anytime.',
-            style: TextStyle(
-              fontSize: 16.sp,
-              color: AppColors.textSecondary,
-              height: 1.4,
-            ),
-          ),
-          SizedBox(height: 40.h),
-          
-          Expanded(
-            child: SingleChildScrollView(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          padding: EdgeInsets.symmetric(horizontal: 24.w),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: IntrinsicHeight(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  SizedBox(height: 32.h),
+
+                  // Title
+                  Text(
+                    'Preferences',
+                    style: TextStyle(
+                      fontSize: 28.sp,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+
+                  Text(
+                    'Customize your Pocket Health experience. You can change these settings anytime.',
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      color: AppColors.textSecondary,
+                      height: 1.4,
+                    ),
+                  ),
+                  SizedBox(height: 40.h),
+
                   // Notifications Section
                   _SectionHeader(
                     icon: Icons.notifications_outlined,
@@ -68,7 +68,7 @@ class _PreferencesStepState extends State<PreferencesStep> {
                     subtitle: 'Stay informed about your health journey',
                   ),
                   SizedBox(height: 16.h),
-                  
+
                   _PreferenceItem(
                     title: 'Health Reminders',
                     subtitle: 'Medication, appointments, and health check reminders',
@@ -79,7 +79,7 @@ class _PreferencesStepState extends State<PreferencesStep> {
                       });
                     },
                   ),
-                  
+
                   _PreferenceItem(
                     title: 'Community Notifications',
                     subtitle: 'Updates from community discussions and support groups',
@@ -90,7 +90,7 @@ class _PreferencesStepState extends State<PreferencesStep> {
                       });
                     },
                   ),
-                  
+
                   _PreferenceItem(
                     title: 'Weekly Health Reports',
                     subtitle: 'Summary of your health progress and insights',
@@ -101,9 +101,9 @@ class _PreferencesStepState extends State<PreferencesStep> {
                       });
                     },
                   ),
-                  
+
                   SizedBox(height: 32.h),
-                  
+
                   // Privacy Section
                   _SectionHeader(
                     icon: Icons.privacy_tip_outlined,
@@ -111,7 +111,7 @@ class _PreferencesStepState extends State<PreferencesStep> {
                     subtitle: 'Control how your data is used',
                   ),
                   SizedBox(height: 16.h),
-                  
+
                   _PreferenceItem(
                     title: 'Anonymous Data Sharing',
                     subtitle: 'Help improve health research with anonymized data',
@@ -122,7 +122,7 @@ class _PreferencesStepState extends State<PreferencesStep> {
                       });
                     },
                   ),
-                  
+
                   SizedBox(height: 32.h),
 
                   // Health Tracking Section
@@ -132,7 +132,7 @@ class _PreferencesStepState extends State<PreferencesStep> {
                     subtitle: 'Choose how you want to log your data',
                   ),
                   SizedBox(height: 16.h),
-                  
+
                   Container(
                     padding: EdgeInsets.all(16.w),
                     decoration: BoxDecoration(
@@ -156,11 +156,11 @@ class _PreferencesStepState extends State<PreferencesStep> {
                           value: _loggingMode,
                           items: const [
                             DropdownMenuItem(
-                              value: 'quick', 
+                              value: 'quick',
                               child: Text('Quick Check-In (Fastest)'),
                             ),
                             DropdownMenuItem(
-                              value: 'classic', 
+                              value: 'classic',
                               child: Text('Detailed Log (Comprehensive)'),
                             ),
                           ],
@@ -169,8 +169,7 @@ class _PreferencesStepState extends State<PreferencesStep> {
                               _loggingMode = value!;
                             });
                             // Save preference
-                            Provider.of<UserProvider>(context, listen: false)
-                                .updatePreferredLoggingMode(value!);
+                            Provider.of<UserProvider>(context, listen: false).updatePreferredLoggingMode(value!);
                           },
                           decoration: InputDecoration(
                             filled: true,
@@ -195,9 +194,9 @@ class _PreferencesStepState extends State<PreferencesStep> {
                         ),
                         SizedBox(height: 8.h),
                         Text(
-                          _loggingMode == 'quick' 
-                            ? 'One simple question per day. Optimized for consistency.' 
-                            : 'Log multiple symptoms and vitals at once. Optimized for detail.',
+                          _loggingMode == 'quick'
+                              ? 'One simple question per day. Optimized for consistency.'
+                              : 'Log multiple symptoms and vitals at once. Optimized for detail.',
                           style: TextStyle(fontSize: 12.sp, color: AppColors.textSecondary),
                         ),
                       ],
@@ -205,7 +204,7 @@ class _PreferencesStepState extends State<PreferencesStep> {
                   ),
 
                   SizedBox(height: 32.h),
-                  
+
                   // App Settings Section
                   _SectionHeader(
                     icon: Icons.settings_outlined,
@@ -213,7 +212,7 @@ class _PreferencesStepState extends State<PreferencesStep> {
                     subtitle: 'Customize your app experience',
                   ),
                   SizedBox(height: 16.h),
-                  
+
                   // Language Preference
                   Container(
                     padding: EdgeInsets.all(16.w),
@@ -272,7 +271,7 @@ class _PreferencesStepState extends State<PreferencesStep> {
                     ),
                   ),
                   SizedBox(height: 16.h),
-                  
+
                   // Theme Preference
                   Container(
                     padding: EdgeInsets.all(16.w),
@@ -329,33 +328,33 @@ class _PreferencesStepState extends State<PreferencesStep> {
                       ],
                     ),
                   ),
-                  
-                  SizedBox(height: 40.h),
+
+                  const Spacer(),
+
+                  // Complete Button
+                  Padding(
+                    padding: EdgeInsets.only(bottom: 32.h),
+                    child: Consumer<UserProvider>(
+                      builder: (context, userProvider, child) {
+                        return LoadingButton(
+                          onPressed: widget.onComplete,
+                          isLoading: userProvider.isLoading,
+                          text: 'Complete Setup',
+                          icon: Icon(
+                            Icons.check_circle_outline,
+                            size: 20.sp,
+                            color: Colors.white,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
-          
-          // Complete Button
-          Padding(
-            padding: EdgeInsets.only(bottom: 32.h),
-            child: Consumer<UserProvider>(
-              builder: (context, userProvider, child) {
-                return LoadingButton(
-                  onPressed: widget.onComplete,
-                  isLoading: userProvider.isLoading,
-                  text: 'Complete Setup',
-                  icon: Icon(
-                    Icons.check_circle_outline,
-                    size: 20.sp,
-                    color: Colors.white,
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

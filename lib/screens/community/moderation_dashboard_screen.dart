@@ -791,68 +791,96 @@ class _ModerationDashboardScreenState extends State<ModerationDashboardScreen>
       ),
       builder: (context) => DraggableScrollableSheet(
         expand: false,
-        initialChildSize: 0.7,
+        initialChildSize: 0.6,
         maxChildSize: 0.9,
         builder: (context, scrollController) => Container(
           padding: EdgeInsets.all(16.w),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Report Details',
-                style: TextStyle(
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              SizedBox(height: 16.h),
-              Text(
-                'Category: ${report.category.displayName}',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              SizedBox(height: 8.h),
-              Text(
-                'Description: ${report.description}',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              SizedBox(height: 24.h),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () {
-                        // TODO: Dismiss report
-                        Navigator.pop(context);
-                      },
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: AppColors.textSecondary),
-                      ),
-                      child: const Text('Dismiss'),
+          child: SingleChildScrollView(
+            controller: scrollController,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40.w,
+                    height: 4.h,
+                    margin: EdgeInsets.only(bottom: 16.h),
+                    decoration: BoxDecoration(
+                      color: AppColors.grey300,
+                      borderRadius: BorderRadius.circular(2.r),
                     ),
                   ),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        // TODO: Take action on content
-                        Navigator.pop(context);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                      ),
-                      child: const Text('Review Content'),
-                    ),
+                ),
+                Text(
+                  'Report Details',
+                  style: TextStyle(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
                   ),
-                ],
-              ),
-            ],
+                ),
+                SizedBox(height: 16.h),
+                Text(
+                  'Category: ${report.category.displayName}',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                SizedBox(height: 12.h),
+                Text(
+                  'Description:',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  report.description,
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: AppColors.textSecondary,
+                    height: 1.4,
+                  ),
+                ),
+                SizedBox(height: 32.h),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          // TODO: Dismiss report
+                          Navigator.pop(context);
+                        },
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: AppColors.textSecondary),
+                          padding: EdgeInsets.symmetric(vertical: 12.h),
+                        ),
+                        child: const Text('Dismiss'),
+                      ),
+                    ),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          // TODO: Take action on content
+                          Navigator.pop(context);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          padding: EdgeInsets.symmetric(vertical: 12.h),
+                        ),
+                        child: const Text('Review Content'),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 16.h),
+              ],
+            ),
           ),
         ),
       ),

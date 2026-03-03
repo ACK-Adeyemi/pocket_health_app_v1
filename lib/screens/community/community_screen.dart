@@ -148,73 +148,81 @@ class _CommunityScreenState extends State<CommunityScreen> {
 
   Widget _buildNotAuthenticated() {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.lock_outline,
-            size: 64.sp,
-            color: AppColors.textSecondary,
-          ),
-          SizedBox(height: 16.h),
-          Text(
-            'Sign in to join the community',
-            style: TextStyle(
-              fontSize: 18.sp,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            'Connect with others who share similar health experiences',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14.sp,
+      child: SingleChildScrollView(
+        padding: EdgeInsets.all(24.w),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.lock_outline,
+              size: 64.sp,
               color: AppColors.textSecondary,
             ),
-          ),
-          SizedBox(height: 24.h),
-          ElevatedButton(
-            onPressed: () {
-              // TODO: Navigate to login
-            },
-            child: const Text('Sign In'),
-          ),
-        ],
+            SizedBox(height: 16.h),
+            Text(
+              'Sign in to join the community',
+              style: TextStyle(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              'Connect with others who share similar health experiences',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            SizedBox(height: 24.h),
+            ElevatedButton(
+              onPressed: () {
+                // TODO: Navigate to login
+              },
+              child: const Text('Sign In'),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildEmptyState() {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.groups_outlined,
-            size: 64.sp,
-            color: AppColors.textSecondary,
-          ),
-          SizedBox(height: 16.h),
-          Text(
-            'No groups available',
-            style: TextStyle(
-              fontSize: 18.sp,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            'Groups will be available based on your health conditions',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14.sp,
+      child: SingleChildScrollView(
+        padding: EdgeInsets.all(24.w),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.groups_outlined,
+              size: 64.sp,
               color: AppColors.textSecondary,
             ),
-          ),
-        ],
+            SizedBox(height: 16.h),
+            Text(
+              'No groups available',
+              style: TextStyle(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              'Groups will be available based on your health conditions',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

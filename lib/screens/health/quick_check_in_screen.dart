@@ -67,125 +67,127 @@ class _QuickCheckInModalState extends State<QuickCheckInModal> {
         }
 
         return Container(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom + 32.h,
-            left: 24.w,
-            right: 24.w,
-            top: 12.h,
-          ),
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Handle
-              Container(
-                width: 40.w,
-                height: 4.h,
-                decoration: BoxDecoration(
-                  color: AppColors.grey300,
-                  borderRadius: BorderRadius.circular(2.r),
-                ),
-              ),
-              SizedBox(height: 24.h),
-              
-              // Header
-              Row(
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(8.w),
-                    decoration: BoxDecoration(
-                      color: metric.color.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8.r),
-                    ),
-                    child: Icon(metric.icon, color: metric.color, size: 24.sp),
+          child: SingleChildScrollView(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom + 32.h,
+              left: 24.w,
+              right: 24.w,
+              top: 12.h,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Handle
+                Container(
+                  width: 40.w,
+                  height: 4.h,
+                  decoration: BoxDecoration(
+                    color: AppColors.grey300,
+                    borderRadius: BorderRadius.circular(2.r),
                   ),
-                  SizedBox(width: 16.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Daily Pulse',
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            color: AppColors.textSecondary,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        Text(
-                          condition.name,
-                          style: TextStyle(
-                            fontSize: 18.sp,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 32.h),
-
-              // Question
-              Text(
-                metric.instructions ?? 'How are you feeling today?',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
                 ),
-              ),
-              SizedBox(height: 24.h),
+                SizedBox(height: 24.h),
 
-              // Input Area
-              _buildInput(metric),
-              
-              SizedBox(height: 32.h),
-
-              // Action Buttons
-              Row(
-                children: [
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: Text(
-                        'Skip',
-                        style: TextStyle(color: AppColors.textSecondary),
+                // Header
+                Row(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(8.w),
+                      decoration: BoxDecoration(
+                        color: metric.color.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8.r),
                       ),
+                      child: Icon(metric.icon, color: metric.color, size: 24.sp),
                     ),
-                  ),
-                  SizedBox(width: 16.w),
-                  Expanded(
-                    flex: 2,
-                    child: ElevatedButton(
-                      onPressed: provider.isSaving ? null : () async {
-                        final success = await provider.submitCheckIn(_currentValue);
-                        if (success && mounted) {
-                          Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Daily pulse logged! Keep it up.'),
-                              backgroundColor: AppColors.secondary,
-                              behavior: SnackBarBehavior.floating,
+                    SizedBox(width: 16.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Daily Pulse',
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w500,
                             ),
-                          );
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: metric.color,
-                        padding: EdgeInsets.symmetric(vertical: 16.h),
+                          ),
+                          Text(
+                            condition.name,
+                            style: TextStyle(
+                              fontSize: 18.sp,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ],
                       ),
-                      child: const Text('Log Entry'),
                     ),
+                  ],
+                ),
+                SizedBox(height: 32.h),
+
+                // Question
+                Text(
+                  metric.instructions ?? 'How are you feeling today?',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
                   ),
-                ],
-              ),
-            ],
+                ),
+                SizedBox(height: 24.h),
+
+                // Input Area
+                _buildInput(metric),
+
+                SizedBox(height: 32.h),
+
+                // Action Buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text(
+                          'Skip',
+                          style: TextStyle(color: AppColors.textSecondary),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 16.w),
+                    Expanded(
+                      flex: 2,
+                      child: ElevatedButton(
+                        onPressed: provider.isSaving ? null : () async {
+                          final success = await provider.submitCheckIn(_currentValue);
+                          if (success && mounted) {
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Daily pulse logged! Keep it up.'),
+                                backgroundColor: AppColors.secondary,
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: metric.color,
+                          padding: EdgeInsets.symmetric(vertical: 16.h),
+                        ),
+                        child: const Text('Log Entry'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         );
       },
