@@ -36,7 +36,6 @@ class _AddHealthEntryScreenState extends State<AddHealthEntryScreen> {
     super.initState();
     _metrics = HealthMetric.getMetricsForCondition(widget.condition.id);
     
-    // Initialize controllers and default values
     for (final metric in _metrics) {
       _controllers[metric.id] = TextEditingController();
       if (metric.options != null && metric.options!.isNotEmpty) {
@@ -66,12 +65,10 @@ class _AddHealthEntryScreenState extends State<AddHealthEntryScreen> {
         throw Exception('User not logged in');
       }
 
-      // Check if this is a grouped entry (like blood pressure)
       final isBloodPressureEntry = _metrics.any((m) => m.id == 'bp_systolic') && 
                                    _metrics.any((m) => m.id == 'bp_diastolic');
 
       if (isBloodPressureEntry && _entryValues.containsKey('bp_systolic') && _entryValues.containsKey('bp_diastolic')) {
-        // Create grouped blood pressure entry
         final entries = [
           HealthEntry(
             id: '',
@@ -93,7 +90,6 @@ class _AddHealthEntryScreenState extends State<AddHealthEntryScreen> {
           ),
         ];
 
-        // Add heart rate if provided
         if (_entryValues.containsKey('bp_heart_rate') && _entryValues['bp_heart_rate'] != null) {
           entries.add(HealthEntry(
             id: '',
@@ -120,7 +116,6 @@ class _AddHealthEntryScreenState extends State<AddHealthEntryScreen> {
           throw Exception('Failed to save health entries');
         }
       } else {
-        // Create individual entries
         for (final metric in _metrics) {
           if (_entryValues.containsKey(metric.id) && _entryValues[metric.id] != null) {
             final entry = HealthEntry(
@@ -143,12 +138,12 @@ class _AddHealthEntryScreenState extends State<AddHealthEntryScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('Health entry saved successfully!'),
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.of(context).pop(true); // Return true to indicate success
+        Navigator.of(context).pop(true);
       }
     } catch (e) {
       if (mounted) {
@@ -312,7 +307,7 @@ class _AddHealthEntryScreenState extends State<AddHealthEntryScreen> {
         SizedBox(height: 8.h),
         TextFormField(
           controller: _controllers[metric.id],
-          keyboardType: TextInputType.numberWithOptions(decimal: true),
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
           decoration: InputDecoration(
             hintText: 'Enter ${metric.name.toLowerCase()}',
             suffixText: metric.getUnitDisplay(),
@@ -399,6 +394,7 @@ class _AddHealthEntryScreenState extends State<AddHealthEntryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: Text(
           'Add ${widget.condition.name} Entry',
@@ -411,12 +407,12 @@ class _AddHealthEntryScreenState extends State<AddHealthEntryScreen> {
         backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
       body: _isLoading
-          ? Center(
+          ? const Center(
               child: CircularProgressIndicator(color: AppColors.primary),
             )
           : Form(
@@ -426,7 +422,6 @@ class _AddHealthEntryScreenState extends State<AddHealthEntryScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Date/Time Selection
                     Card(
                       color: AppColors.surface,
                       child: Padding(
@@ -448,7 +443,7 @@ class _AddHealthEntryScreenState extends State<AddHealthEntryScreen> {
                                 final date = await showDatePicker(
                                   context: context,
                                   initialDate: _selectedDateTime,
-                                  firstDate: DateTime.now().subtract(Duration(days: 365)),
+                                  firstDate: DateTime.now().subtract(const Duration(days: 365)),
                                   lastDate: DateTime.now(),
                                 );
                                 if (date != null) {
@@ -477,7 +472,7 @@ class _AddHealthEntryScreenState extends State<AddHealthEntryScreen> {
                                 ),
                                 child: Row(
                                   children: [
-                                    Icon(Icons.calendar_today, color: AppColors.primary),
+                                    const Icon(Icons.calendar_today, color: AppColors.primary),
                                     SizedBox(width: 12.w),
                                     Text(
                                       '${_selectedDateTime.day}/${_selectedDateTime.month}/${_selectedDateTime.year} at ${_selectedDateTime.hour.toString().padLeft(2, '0')}:${_selectedDateTime.minute.toString().padLeft(2, '0')}',
@@ -496,7 +491,6 @@ class _AddHealthEntryScreenState extends State<AddHealthEntryScreen> {
                     ),
                     SizedBox(height: 16.h),
 
-                    // Metrics Input
                     ..._metrics.map((metric) {
                       return Card(
                         color: AppColors.surface,
@@ -508,7 +502,6 @@ class _AddHealthEntryScreenState extends State<AddHealthEntryScreen> {
                       );
                     }).toList(),
 
-                    // Notes Section
                     Card(
                       color: AppColors.surface,
                       child: Padding(
@@ -543,7 +536,6 @@ class _AddHealthEntryScreenState extends State<AddHealthEntryScreen> {
                     ),
                     SizedBox(height: 24.h),
 
-                    // Save Button
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -562,6 +554,7 @@ class _AddHealthEntryScreenState extends State<AddHealthEntryScreen> {
                         ),
                       ),
                     ),
+                    SizedBox(height: 32.h + MediaQuery.of(context).viewInsets.bottom),
                   ],
                 ),
               ),

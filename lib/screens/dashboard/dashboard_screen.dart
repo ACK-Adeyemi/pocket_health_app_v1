@@ -491,144 +491,136 @@ class _ProfileTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            padding: EdgeInsets.all(24.w),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight - 48.w), // Subtract padding
-              child: IntrinsicHeight(
-                child: Consumer<UserProvider>(
-                  builder: (context, userProvider, child) {
-                    final user = userProvider.userProfile;
-                    
-                    return Column(
-                      children: [
-                        Text(
-                          'Profile',
-                          style: TextStyle(
-                            fontSize: 24.sp,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        SizedBox(height: 32.h),
-                        
-                        if (user != null) ...[
-                          Container(
-                            width: 80.w,
-                            height: 80.w,
-                            decoration: BoxDecoration(
-                              gradient: AppColors.primaryGradient,
-                              borderRadius: BorderRadius.circular(40.r),
-                            ),
-                            child: Icon(
-                              Icons.person,
-                              color: Colors.white,
-                              size: 40.sp,
-                            ),
-                          ),
-                          SizedBox(height: 16.h),
-                          
-                          Text(
-                            user.name,
-                            style: TextStyle(
-                              fontSize: 20.sp,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          SizedBox(height: 8.h),
-                          
-                          Text(
-                            user.email,
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                          if (user.role == UserRole.admin || user.role == UserRole.moderator) ...[
-                            SizedBox(height: 12.h),
-                            Container(
-                              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
-                              decoration: BoxDecoration(
-                                color: user.role == UserRole.admin 
-                                    ? AppColors.accent.withOpacity(0.1) 
-                                    : AppColors.primary.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12.r),
-                                border: Border.all(
-                                  color: user.role == UserRole.admin 
-                                      ? AppColors.accent 
-                                      : AppColors.primary,
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    user.role == UserRole.admin ? Icons.admin_panel_settings : Icons.verified_user,
-                                    size: 14.sp,
-                                    color: user.role == UserRole.admin ? AppColors.accentDark : AppColors.primary,
-                                  ),
-                                  SizedBox(width: 4.w),
-                                  Text(
-                                    user.role.value.toUpperCase(),
-                                    style: TextStyle(
-                                      fontSize: 12.sp,
-                                      fontWeight: FontWeight.bold,
-                                      color: user.role == UserRole.admin ? AppColors.accentDark : AppColors.primary,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                          SizedBox(height: 32.h),
-                        ],
-                        
-                        const Spacer(),
-                        
-                        // Sign Out Button
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton(
-                            onPressed: () async {
-                              final authProvider = Provider.of<AuthProvider>(context, listen: false);
-                              final userProvider = Provider.of<UserProvider>(context, listen: false);
-                              
-                              await authProvider.signOut();
-                              userProvider.clearUserProfile();
-                              
-                              if (context.mounted) {
-                                context.go('/welcome');
-                              }
-                            },
-                            style: OutlinedButton.styleFrom(
-                              side: BorderSide(color: AppColors.error),
-                              minimumSize: Size(double.infinity, 48.h),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8.r),
-                              ),
-                            ),
-                            child: Text(
-                              'Sign Out',
-                              style: TextStyle(
-                                fontSize: 16.sp,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.error,
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 32.h),
-                      ],
-                    );
-                  },
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.all(24.w),
+        child: Consumer<UserProvider>(
+          builder: (context, userProvider, child) {
+            final user = userProvider.userProfile;
+            
+            return Column(
+              children: [
+                Text(
+                  'Profile',
+                  style: TextStyle(
+                    fontSize: 24.sp,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
-              ),
-            ),
-          );
-        },
+                SizedBox(height: 32.h),
+                
+                if (user != null) ...[
+                  Container(
+                    width: 80.w,
+                    height: 80.w,
+                    decoration: BoxDecoration(
+                      gradient: AppColors.primaryGradient,
+                      borderRadius: BorderRadius.circular(40.r),
+                    ),
+                    child: Icon(
+                      Icons.person,
+                      color: Colors.white,
+                      size: 40.sp,
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                  
+                  Text(
+                    user.name,
+                    style: TextStyle(
+                      fontSize: 20.sp,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  
+                  Text(
+                    user.email,
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  if (user.role == UserRole.admin || user.role == UserRole.moderator) ...[
+                    SizedBox(height: 12.h),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+                      decoration: BoxDecoration(
+                        color: user.role == UserRole.admin 
+                            ? AppColors.accent.withOpacity(0.1) 
+                            : AppColors.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12.r),
+                        border: Border.all(
+                          color: user.role == UserRole.admin 
+                              ? AppColors.accent 
+                              : AppColors.primary,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            user.role == UserRole.admin ? Icons.admin_panel_settings : Icons.verified_user,
+                            size: 14.sp,
+                            color: user.role == UserRole.admin ? AppColors.accentDark : AppColors.primary,
+                          ),
+                          SizedBox(width: 4.w),
+                          Text(
+                            user.role.value.toUpperCase(),
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.bold,
+                              color: user.role == UserRole.admin ? AppColors.accentDark : AppColors.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  SizedBox(height: 32.h),
+                ],
+                
+                SizedBox(height: 48.h),
+                
+                // Sign Out Button
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: () async {
+                      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                      final userProvider = Provider.of<UserProvider>(context, listen: false);
+                      
+                      await authProvider.signOut();
+                      userProvider.clearUserProfile();
+                      
+                      if (context.mounted) {
+                        context.go('/welcome');
+                      }
+                    },
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: AppColors.error),
+                      minimumSize: Size(double.infinity, 48.h),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                    ),
+                    child: Text(
+                      'Sign Out',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.error,
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 60.h),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

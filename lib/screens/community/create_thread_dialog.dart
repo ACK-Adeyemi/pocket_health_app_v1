@@ -95,180 +95,199 @@ class _CreateThreadDialogState extends State<CreateThreadDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      titlePadding: EdgeInsets.zero,
-      contentPadding: const EdgeInsets.fromLTRB(24.0, 20.0, 24.0, 24.0),
+    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+    
+    return Dialog(
+      insetPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.0),
+        borderRadius: BorderRadius.circular(16.r),
       ),
-      title: Container(
-        padding: const EdgeInsets.all(16.0),
-        decoration: const BoxDecoration(
-          color: AppColors.primary,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(16.0),
-            topRight: Radius.circular(16.0),
-          ),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.add, color: Colors.white),
-            const SizedBox(width: 12.0),
-            const Expanded(
-              child: Text(
-                'Start Discussion',
-                style: TextStyle(
-                  fontSize: 18.0,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Header
+          Container(
+            padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(16.r),
+                topRight: Radius.circular(16.r),
               ),
             ),
-            IconButton(
-              icon: const Icon(Icons.close, color: Colors.white),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ],
-        ),
-      ),
-      content: Container(
-        width: MediaQuery.of(context).size.width > 600 ? 500.0 : MediaQuery.of(context).size.width,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Group: ${widget.group.name}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.primary,
-                ),
-              ),
-              const SizedBox(height: 16.0),
-              const Text(
-                'Title *',
-                style: TextStyle(
-                  fontSize: 14.0,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 8.0),
-              TextField(
-                controller: _titleController,
-                decoration: InputDecoration(
-                  hintText: 'What would you like to discuss?',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                  contentPadding: const EdgeInsets.all(12.0),
-                ),
-                maxLength: 200,
-              ),
-              const SizedBox(height: 16.0),
-              const Text(
-                'Content *',
-                style: TextStyle(
-                  fontSize: 14.0,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 8.0),
-              TextField(
-                controller: _contentController,
-                decoration: InputDecoration(
-                  hintText: 'Share your thoughts, experiences, or questions...',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                  contentPadding: const EdgeInsets.all(12.0),
-                ),
-                maxLines: 5,
-                maxLength: 2000,
-              ),
-              const SizedBox(height: 16.0),
-              const Text(
-                'Tags (Optional)',
-                style: TextStyle(
-                  fontSize: 14.0,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 8.0),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _tagController,
-                      decoration: InputDecoration(
-                        hintText: 'Add a tag...',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                        contentPadding: const EdgeInsets.all(12.0),
-                      ),
-                      onSubmitted: (_) => _addTag(),
+            child: Row(
+              children: [
+                const Icon(Icons.add, color: Colors.white),
+                SizedBox(width: 12.w),
+                const Expanded(
+                  child: Text(
+                    'Start Discussion',
+                    style: TextStyle(
+                      fontSize: 18.0,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
                     ),
                   ),
-                  const SizedBox(width: 8.0),
-                  ElevatedButton(
-                    onPressed: _addTag,
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(0, 48),
-                    ),
-                    child: const Text('Add'),
-                  ),
-                ],
-              ),
-              if (_tags.isNotEmpty) ...[
-                const SizedBox(height: 12.0),
-                Wrap(
-                  spacing: 8.0,
-                  runSpacing: 4.0,
-                  children: _tags.map((tag) => Chip(
-                    label: Text(tag),
-                    deleteIcon: const Icon(Icons.close, size: 16),
-                    onDeleted: () => _removeTag(tag),
-                  )).toList(),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white),
+                  onPressed: () => Navigator.pop(context),
+                  constraints: const BoxConstraints(),
+                  padding: EdgeInsets.zero,
                 ),
               ],
-            ],
+            ),
           ),
-        ),
-      ),
-      actions: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            TextButton(
-              onPressed: _isLoading ? null : () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            const SizedBox(width: 8.0),
-            ElevatedButton(
-              onPressed: _isLoading ? null : _createThread,
-              style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-                backgroundColor: AppColors.primary,
-                minimumSize: const Size(0, 0),
-              ),
-              child: _isLoading
-                ? SizedBox(
-                    width: 20.w,
-                    height: 20.w,
-                    child: const CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+          
+          // Scrollable Content
+          Flexible(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Group: ${widget.group.name}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.primary,
                     ),
-                  )
-                : const Text('Create'),
+                  ),
+                  SizedBox(height: 16.h),
+                  const Text(
+                    'Title *',
+                    style: TextStyle(
+                      fontSize: 14.0,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  TextField(
+                    controller: _titleController,
+                    decoration: InputDecoration(
+                      hintText: 'What would you like to discuss?',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      contentPadding: const EdgeInsets.all(12.0),
+                    ),
+                    maxLength: 200,
+                  ),
+                  SizedBox(height: 16.h),
+                  const Text(
+                    'Content *',
+                    style: TextStyle(
+                      fontSize: 14.0,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  TextField(
+                    controller: _contentController,
+                    decoration: InputDecoration(
+                      hintText: 'Share your thoughts, experiences, or questions...',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      contentPadding: const EdgeInsets.all(12.0),
+                    ),
+                    maxLines: 4,
+                    maxLength: 2000,
+                  ),
+                  SizedBox(height: 16.h),
+                  const Text(
+                    'Tags (Optional)',
+                    style: TextStyle(
+                      fontSize: 14.0,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _tagController,
+                          decoration: InputDecoration(
+                            hintText: 'Add a tag...',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                            contentPadding: const EdgeInsets.all(12.0),
+                          ),
+                          onSubmitted: (_) => _addTag(),
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
+                      ElevatedButton(
+                        onPressed: _addTag,
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: Size(0, 48.h),
+                        ),
+                        child: const Text('Add'),
+                      ),
+                    ],
+                  ),
+                  if (_tags.isNotEmpty) ...[
+                    SizedBox(height: 12.h),
+                    Wrap(
+                      spacing: 8.w,
+                      runSpacing: 4.h,
+                      children: _tags.map((tag) => Chip(
+                        label: Text(tag, style: TextStyle(fontSize: 12.sp)),
+                        deleteIcon: const Icon(Icons.close, size: 14),
+                        onDeleted: () => _removeTag(tag),
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        padding: EdgeInsets.zero,
+                      )).toList(),
+                    ),
+                  ],
+                  // Extra space for keyboard if needed
+                  SizedBox(height: 20.h),
+                ],
+              ),
             ),
-          ],
-        ),
-      ],
+          ),
+          
+          // Actions
+          Padding(
+            padding: EdgeInsets.all(16.w),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: _isLoading ? null : () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                SizedBox(width: 12.w),
+                ElevatedButton(
+                  onPressed: _isLoading ? null : _createThread,
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+                    backgroundColor: AppColors.primary,
+                    minimumSize: const Size(0, 0),
+                  ),
+                  child: _isLoading
+                    ? SizedBox(
+                        width: 20.w,
+                        height: 20.w,
+                        child: const CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : const Text('Create'),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

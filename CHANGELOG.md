@@ -8,12 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **Responsiveness & Scrolling**: Comprehensive update to support smaller screen sizes (e.g., iPhone SE 375x667)
-  - Added `SingleChildScrollView` to all onboarding steps (`BasicInfo`, `HealthConditions`, `GPDetails`, `Preferences`)
-  - Implemented `LayoutBuilder` and `IntrinsicHeight` patterns to ensure buttons stay at the bottom on large screens while remaining scrollable on small ones
-  - Updated `Welcome`, `Login`, and `Register` screens with full scrolling support
-  - Enhanced dialogs and modals (`CreateThreadDialog`, `ReportDialog`, `QuickCheckInModal`) to prevent overflow when keyboard is active
-  - Fixed overflow issues in Community empty states and Moderation Dashboard review modals
+- **Enhanced Responsiveness & Viewport Management**: Comprehensive fix for layout issues on mobile browsers and small devices (e.g., iPhone SE).
+  - Replaced all flex-based vertical spacers with fixed spacing to prevent content "squashing" by browser toolbars and keyboards.
+  - Implemented `AlwaysScrollableScrollPhysics` across all forms to ensure consistent interactivity.
+  - Optimized keyboard handling by leveraging automatic Scaffold resizing and removing conflicting manual padding.
+  - Refactored `CreateThreadDialog`, `ReportDialog`, and `QuickCheckInModal` for better adaptation to constrained heights.
 - **Profile Role Visibility**: Display user role (Admin/Moderator) on the profile page for elevated accounts.
 - **Community Forum System**: Complete implementation of user community features
   - Groups auto-generated from health condition categories

@@ -76,253 +76,245 @@ class _BasicInfoStepState extends State<BasicInfoStep> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: 24.w),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: constraints.maxHeight),
-            child: IntrinsicHeight(
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: 32.h),
-                    
-                    // Title
-                    Text(
-                      'Tell us about yourself',
-                      style: TextStyle(
-                        fontSize: 28.sp,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    SizedBox(height: 8.h),
-                    
-                    Text(
-                      'This information helps us personalize your health experience.',
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        color: AppColors.textSecondary,
-                        height: 1.4,
-                      ),
-                    ),
-                    SizedBox(height: 40.h),
-                    
-                    // Name Field
-                    CustomTextField(
-                      controller: _nameController,
-                      label: 'Full Name',
-                      textCapitalization: TextCapitalization.words,
-                      validator: ValidationBuilder()
-                          .required('Name is required')
-                          .minLength(2, 'Name must be at least 2 characters')
-                          .build(),
-                    ),
-                    SizedBox(height: 24.h),
-                    
-                    // Age Field
-                    CustomTextField(
-                      controller: _ageController,
-                      label: 'Age',
-                      keyboardType: TextInputType.number,
-                      validator: ValidationBuilder()
-                          .required('Age is required')
-                          .regExp(RegExp(r'^\d+$'), 'Please enter a valid age')
-                          .add((value) {
-                            final age = int.tryParse(value ?? '');
-                            if (age == null || age < 13 || age > 120) {
-                              return 'Age must be between 13 and 120';
-                            }
-                            return null;
-                          })
-                          .build(),
-                    ),
-                    SizedBox(height: 24.h),
-                    
-                    // Height Field with Unit Selector
-                    Row(
-                      children: [
-                        Expanded(
-                          flex: 2,
-                          child: CustomTextField(
-                            controller: _heightController,
-                            label: 'Height',
-                            keyboardType: TextInputType.numberWithOptions(decimal: true),
-                            validator: ValidationBuilder()
-                                .required('Height is required')
-                                .regExp(RegExp(r'^\d+\.?\d*$'), 'Please enter a valid height')
-                                .add((value) {
-                                  final height = double.tryParse(value ?? '');
-                                  if (height == null || height <= 0) {
-                                    return 'Please enter a valid height';
-                                  }
-                                  if (_heightUnit == 'cm' && (height < 50 || height > 300)) {
-                                    return 'Height must be between 50-300 cm';
-                                  }
-                                  if (_heightUnit == 'ft' && (height < 2 || height > 10)) {
-                                    return 'Height must be between 2-10 ft';
-                                  }
-                                  return null;
-                                })
-                                .build(),
-                          ),
-                        ),
-                        SizedBox(width: 16.w),
-                        Expanded(
-                          flex: 1,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Unit',
-                                style: TextStyle(
-                                  fontSize: 14.sp,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                              SizedBox(height: 8.h),
-                              DropdownButtonFormField<String>(
-                                value: _heightUnit,
-                                items: const [
-                                  DropdownMenuItem(value: 'cm', child: Text('cm')),
-                                  DropdownMenuItem(value: 'ft', child: Text('ft')),
-                                ],
-                                onChanged: (value) {
-                                  setState(() {
-                                    _heightUnit = value!;
-                                  });
-                                },
-                                decoration: InputDecoration(
-                                  filled: true,
-                                  fillColor: Colors.grey[50],
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8.r),
-                                    borderSide: BorderSide(color: Colors.grey[300]!),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8.r),
-                                    borderSide: BorderSide(color: Colors.grey[300]!),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8.r),
-                                    borderSide: BorderSide(color: AppColors.primary, width: 2),
-                                  ),
-                                  contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 16.w,
-                                    vertical: 16.h,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 24.h),
-                    
-                    // Weight Field with Unit Selector
-                    Row(
-                      children: [
-                        Expanded(
-                          flex: 2,
-                          child: CustomTextField(
-                            controller: _weightController,
-                            label: 'Weight',
-                            keyboardType: TextInputType.numberWithOptions(decimal: true),
-                            validator: ValidationBuilder()
-                                .required('Weight is required')
-                                .regExp(RegExp(r'^\d+\.?\d*$'), 'Please enter a valid weight')
-                                .add((value) {
-                                  final weight = double.tryParse(value ?? '');
-                                  if (weight == null || weight <= 0) {
-                                    return 'Please enter a valid weight';
-                                  }
-                                  if (_weightUnit == 'kg' && (weight < 20 || weight > 300)) {
-                                    return 'Weight must be between 20-300 kg';
-                                  }
-                                  if (_weightUnit == 'lbs' && (weight < 44 || weight > 660)) {
-                                    return 'Weight must be between 44-660 lbs';
-                                  }
-                                  return null;
-                                })
-                                .build(),
-                          ),
-                        ),
-                        SizedBox(width: 16.w),
-                        Expanded(
-                          flex: 1,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Unit',
-                                style: TextStyle(
-                                  fontSize: 14.sp,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                              SizedBox(height: 8.h),
-                              DropdownButtonFormField<String>(
-                                value: _weightUnit,
-                                items: const [
-                                  DropdownMenuItem(value: 'kg', child: Text('kg')),
-                                  DropdownMenuItem(value: 'lbs', child: Text('lbs')),
-                                ],
-                                onChanged: (value) {
-                                  setState(() {
-                                    _weightUnit = value!;
-                                  });
-                                },
-                                decoration: InputDecoration(
-                                  filled: true,
-                                  fillColor: Colors.grey[50],
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8.r),
-                                    borderSide: BorderSide(color: Colors.grey[300]!),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8.r),
-                                    borderSide: BorderSide(color: Colors.grey[300]!),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8.r),
-                                    borderSide: BorderSide(color: AppColors.primary, width: 2),
-                                  ),
-                                  contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 16.w,
-                                    vertical: 16.h,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    
-                    const Spacer(),
-                    
-                    // Next Button
-                    Padding(
-                      padding: EdgeInsets.only(bottom: 32.h),
-                      child: LoadingButton(
-                        onPressed: _handleNext,
-                        isLoading: false,
-                        text: 'Continue',
-                      ),
-                    ),
-                  ],
-                ),
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: EdgeInsets.symmetric(horizontal: 24.w),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(height: 16.h),
+            
+            // Title
+            Text(
+              'Tell us about yourself',
+              style: TextStyle(
+                fontSize: 28.sp,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
               ),
             ),
-          ),
-        );
-      },
+            SizedBox(height: 8.h),
+            
+            Text(
+              'This information helps us personalize your health experience.',
+              style: TextStyle(
+                fontSize: 16.sp,
+                color: AppColors.textSecondary,
+                height: 1.4,
+              ),
+            ),
+            SizedBox(height: 32.h),
+            
+            // Name Field
+            CustomTextField(
+              controller: _nameController,
+              label: 'Full Name',
+              textCapitalization: TextCapitalization.words,
+              validator: ValidationBuilder()
+                  .required('Name is required')
+                  .minLength(2, 'Name must be at least 2 characters')
+                  .build(),
+            ),
+            SizedBox(height: 20.h),
+            
+            // Age Field
+            CustomTextField(
+              controller: _ageController,
+              label: 'Age',
+              keyboardType: TextInputType.number,
+              validator: ValidationBuilder()
+                  .required('Age is required')
+                  .regExp(RegExp(r'^\d+$'), 'Please enter a valid age')
+                  .add((value) {
+                    final age = int.tryParse(value ?? '');
+                    if (age == null || age < 13 || age > 120) {
+                      return 'Age must be between 13 and 120';
+                    }
+                    return null;
+                  })
+                  .build(),
+            ),
+            SizedBox(height: 20.h),
+            
+            // Height Field with Unit Selector
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: CustomTextField(
+                    controller: _heightController,
+                    label: 'Height',
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    validator: ValidationBuilder()
+                        .required('Height is required')
+                        .regExp(RegExp(r'^\d+\.?\d*$'), 'Please enter a valid height')
+                        .add((value) {
+                          final height = double.tryParse(value ?? '');
+                          if (height == null || height <= 0) {
+                            return 'Please enter a valid height';
+                          }
+                          if (_heightUnit == 'cm' && (height < 50 || height > 300)) {
+                            return 'Height must be between 50-300 cm';
+                          }
+                          if (_heightUnit == 'ft' && (height < 2 || height > 10)) {
+                            return 'Height must be between 2-10 ft';
+                          }
+                          return null;
+                        })
+                        .build(),
+                  ),
+                ),
+                SizedBox(width: 16.w),
+                Expanded(
+                  flex: 1,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Unit',
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      SizedBox(height: 8.h),
+                      DropdownButtonFormField<String>(
+                        value: _heightUnit,
+                        items: const [
+                          DropdownMenuItem(value: 'cm', child: Text('cm')),
+                          DropdownMenuItem(value: 'ft', child: Text('ft')),
+                        ],
+                        onChanged: (value) {
+                          setState(() {
+                            _heightUnit = value!;
+                          });
+                        },
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: Colors.grey[50],
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.r),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.r),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.r),
+                            borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                          ),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 16.w,
+                            vertical: 16.h,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 20.h),
+            
+            // Weight Field with Unit Selector
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: CustomTextField(
+                    controller: _weightController,
+                    label: 'Weight',
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    validator: ValidationBuilder()
+                        .required('Weight is required')
+                        .regExp(RegExp(r'^\d+\.?\d*$'), 'Please enter a valid weight')
+                        .add((value) {
+                          final weight = double.tryParse(value ?? '');
+                          if (weight == null || weight <= 0) {
+                            return 'Please enter a valid weight';
+                          }
+                          if (_weightUnit == 'kg' && (weight < 20 || weight > 300)) {
+                            return 'Weight must be between 20-300 kg';
+                          }
+                          if (_weightUnit == 'lbs' && (weight < 44 || weight > 660)) {
+                            return 'Weight must be between 44-660 lbs';
+                          }
+                          return null;
+                        })
+                        .build(),
+                  ),
+                ),
+                SizedBox(width: 16.w),
+                Expanded(
+                  flex: 1,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Unit',
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      SizedBox(height: 8.h),
+                      DropdownButtonFormField<String>(
+                        value: _weightUnit,
+                        items: const [
+                          DropdownMenuItem(value: 'kg', child: Text('kg')),
+                          DropdownMenuItem(value: 'lbs', child: Text('lbs')),
+                        ],
+                        onChanged: (value) {
+                          setState(() {
+                            _weightUnit = value!;
+                          });
+                        },
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: Colors.grey[50],
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.r),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.r),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.r),
+                            borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                          ),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 16.w,
+                            vertical: 16.h,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            
+            SizedBox(height: 40.h),
+            
+            // Next Button
+            LoadingButton(
+              onPressed: _handleNext,
+              isLoading: false,
+              text: 'Continue',
+            ),
+            SizedBox(height: 60.h), // Extra bottom spacing
+          ],
+        ),
+      ),
     );
   }
 }

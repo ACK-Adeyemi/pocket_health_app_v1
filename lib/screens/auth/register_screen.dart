@@ -53,7 +53,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
 
     if (success && mounted) {
-      // Show email verification dialog
       _showEmailVerificationDialog();
     }
   }
@@ -162,6 +161,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -174,222 +174,216 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
       ),
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
-              padding: EdgeInsets.symmetric(horizontal: 24.w),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: IntrinsicHeight(
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(height: 32.h),
-                        
-                        // Title
-                        Text(
-                          'Create Account',
-                          style: TextStyle(
-                            fontSize: 32.sp,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        SizedBox(height: 8.h),
-                        
-                        Text(
-                          'Join Pocket Health and start your wellness journey',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                        SizedBox(height: 48.h),
-                        
-                        // Email Field
-                        CustomTextField(
-                          controller: _emailController,
-                          label: 'Email Address',
-                          keyboardType: TextInputType.emailAddress,
-                          validator: ValidationBuilder()
-                              .email('Please enter a valid email address')
-                              .required('Email is required')
-                              .build(),
-                        ),
-                        SizedBox(height: 24.h),
-                        
-                        // Password Field
-                        CustomTextField(
-                          controller: _passwordController,
-                          label: 'Password',
-                          obscureText: _obscurePassword,
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                              color: AppColors.textSecondary,
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                _obscurePassword = !_obscurePassword;
-                              });
-                            },
-                          ),
-                          validator: ValidationBuilder()
-                              .required('Password is required')
-                              .minLength(8, 'Password must be at least 8 characters')
-                              .build(),
-                        ),
-                        SizedBox(height: 24.h),
-                        
-                        // Confirm Password Field
-                        CustomTextField(
-                          controller: _confirmPasswordController,
-                          label: 'Confirm Password',
-                          obscureText: _obscureConfirmPassword,
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscureConfirmPassword ? Icons.visibility : Icons.visibility_off,
-                              color: AppColors.textSecondary,
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                _obscureConfirmPassword = !_obscureConfirmPassword;
-                              });
-                            },
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please confirm your password';
-                            }
-                            if (value != _passwordController.text) {
-                              return 'Passwords do not match';
-                            }
-                            return null;
-                          },
-                        ),
-                        SizedBox(height: 24.h),
-                        
-                        // Terms and Conditions
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Checkbox(
-                              value: _acceptTerms,
-                              onChanged: (value) {
-                                setState(() {
-                                  _acceptTerms = value ?? false;
-                                });
-                              },
-                              activeColor: AppColors.primary,
-                            ),
-                            Expanded(
-                              child: Padding(
-                                padding: EdgeInsets.only(top: 12.h),
-                                child: RichText(
-                                  text: TextSpan(
-                                    style: TextStyle(
-                                      fontSize: 14.sp,
-                                      color: AppColors.textSecondary,
-                                    ),
-                                    children: [
-                                      const TextSpan(text: 'I agree to the '),
-                                      TextSpan(
-                                        text: 'Terms of Service',
-                                        style: TextStyle(
-                                          color: AppColors.primary,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      const TextSpan(text: ' and '),
-                                      TextSpan(
-                                        text: 'Privacy Policy',
-                                        style: TextStyle(
-                                          color: AppColors.primary,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 32.h),
-                        
-                        // Error Message
-                        Consumer<AuthProvider>(
-                          builder: (context, authProvider, child) {
-                            if (authProvider.errorMessage != null) {
-                              return Container(
-                                width: double.infinity,
-                                padding: EdgeInsets.all(12.w),
-                                margin: EdgeInsets.only(bottom: 16.h),
-                                decoration: BoxDecoration(
-                                  color: AppColors.error.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(8.r),
-                                  border: Border.all(color: AppColors.error.withOpacity(0.3)),
-                                ),
-                                child: Text(
-                                  authProvider.errorMessage!,
-                                  style: TextStyle(
-                                    fontSize: 14.sp,
-                                    color: AppColors.error,
-                                  ),
-                                ),
-                              );
-                            }
-                            return const SizedBox.shrink();
-                          },
-                        ),
-                        
-                        // Register Button
-                        Consumer<AuthProvider>(
-                          builder: (context, authProvider, child) {
-                            return LoadingButton(
-                              onPressed: _handleRegister,
-                              isLoading: authProvider.isLoading,
-                              text: 'Create Account',
-                            );
-                          },
-                        ),
-                        
-                        const Spacer(),
-                        
-                        // Sign In Link
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Already have an account? ',
-                              style: TextStyle(
-                                fontSize: 14.sp,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: () => context.go('/login'),
-                              child: Text(
-                                'Sign In',
-                                style: TextStyle(
-                                  fontSize: 14.sp,
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 32.h),
-                      ],
-                    ),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.symmetric(horizontal: 24.w),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: 16.h),
+                
+                // Title
+                Text(
+                  'Create Account',
+                  style: TextStyle(
+                    fontSize: 32.sp,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
                   ),
                 ),
-              ),
-            );
-          },
+                SizedBox(height: 8.h),
+                
+                Text(
+                  'Join Pocket Health and start your wellness journey',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                SizedBox(height: 32.h),
+                
+                // Email Field
+                CustomTextField(
+                  controller: _emailController,
+                  label: 'Email Address',
+                  keyboardType: TextInputType.emailAddress,
+                  validator: ValidationBuilder()
+                      .email('Please enter a valid email address')
+                      .required('Email is required')
+                      .build(),
+                ),
+                SizedBox(height: 20.h),
+                
+                // Password Field
+                CustomTextField(
+                  controller: _passwordController,
+                  label: 'Password',
+                  obscureText: _obscurePassword,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                      color: AppColors.textSecondary,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
+                  ),
+                  validator: ValidationBuilder()
+                      .required('Password is required')
+                      .minLength(8, 'Password must be at least 8 characters')
+                      .build(),
+                ),
+                SizedBox(height: 20.h),
+                
+                // Confirm Password Field
+                CustomTextField(
+                  controller: _confirmPasswordController,
+                  label: 'Confirm Password',
+                  obscureText: _obscureConfirmPassword,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscureConfirmPassword ? Icons.visibility : Icons.visibility_off,
+                      color: AppColors.textSecondary,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscureConfirmPassword = !_obscureConfirmPassword;
+                      });
+                    },
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please confirm your password';
+                    }
+                    if (value != _passwordController.text) {
+                      return 'Passwords do not match';
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: 20.h),
+                
+                // Terms and Conditions
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      height: 24.w,
+                      width: 24.w,
+                      child: Checkbox(
+                        value: _acceptTerms,
+                        onChanged: (value) {
+                          setState(() {
+                            _acceptTerms = value ?? false;
+                          });
+                        },
+                        activeColor: AppColors.primary,
+                      ),
+                    ),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: RichText(
+                        text: TextSpan(
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            color: AppColors.textSecondary,
+                          ),
+                          children: [
+                            const TextSpan(text: 'I agree to the '),
+                            TextSpan(
+                              text: 'Terms of Service',
+                              style: TextStyle(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const TextSpan(text: ' and '),
+                            TextSpan(
+                              text: 'Privacy Policy',
+                              style: TextStyle(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 32.h),
+                
+                // Error Message
+                Consumer<AuthProvider>(
+                  builder: (context, authProvider, child) {
+                    if (authProvider.errorMessage != null) {
+                      return Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.all(12.w),
+                        margin: EdgeInsets.only(bottom: 16.h),
+                        decoration: BoxDecoration(
+                          color: AppColors.error.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8.r),
+                          border: Border.all(color: AppColors.error.withOpacity(0.3)),
+                        ),
+                        child: Text(
+                          authProvider.errorMessage!,
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            color: AppColors.error,
+                          ),
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
+                
+                // Register Button
+                Consumer<AuthProvider>(
+                  builder: (context, authProvider, child) {
+                    return LoadingButton(
+                      onPressed: _handleRegister,
+                      isLoading: authProvider.isLoading,
+                      text: 'Create Account',
+                    );
+                  },
+                ),
+                
+                SizedBox(height: 24.h),
+                
+                // Sign In Link
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Already have an account? ',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => context.go('/login'),
+                      child: Text(
+                        'Sign In',
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 60.h), // Extra space at bottom
+              ],
+            ),
+          ),
         ),
       ),
     );

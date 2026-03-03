@@ -41,7 +41,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     if (success && mounted) {
-      // Load user profile to check onboarding status
       await userProvider.loadUserProfile();
 
       if (userProvider.hasCompletedOnboarding) {
@@ -55,6 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -67,166 +67,155 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
-              padding: EdgeInsets.symmetric(horizontal: 24.w),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: IntrinsicHeight(
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(height: 32.h),
-                        
-                        // Title
-                        Text(
-                          'Welcome Back',
-                          style: TextStyle(
-                            fontSize: 32.sp,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        SizedBox(height: 8.h),
-                        
-                        Text(
-                          'Sign in to continue your health journey',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                        SizedBox(height: 48.h),
-                        
-                        // Email Field
-                        CustomTextField(
-                          controller: _emailController,
-                          label: 'Email Address',
-                          keyboardType: TextInputType.emailAddress,
-                          validator: ValidationBuilder()
-                              .email('Please enter a valid email address')
-                              .required('Email is required')
-                              .build(),
-                        ),
-                        SizedBox(height: 24.h),
-                        
-                        // Password Field
-                        CustomTextField(
-                          controller: _passwordController,
-                          label: 'Password',
-                          obscureText: _obscurePassword,
-                          onSubmitted: (_) => _handleLogin(),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                              color: AppColors.textSecondary,
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                _obscurePassword = !_obscurePassword;
-                              });
-                            },
-                          ),
-                          validator: ValidationBuilder()
-                              .required('Password is required')
-                              .build(),
-                        ),
-                        SizedBox(height: 16.h),
-                        
-                        // Forgot Password
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: () {
-                              // TODO: Implement forgot password
-                              _showForgotPasswordDialog();
-                            },
-                            child: Text(
-                              'Forgot Password?',
-                              style: TextStyle(
-                                fontSize: 14.sp,
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 32.h),
-                        
-                        // Error Message
-                        Consumer<AuthProvider>(
-                          builder: (context, authProvider, child) {
-                            if (authProvider.errorMessage != null) {
-                              return Container(
-                                width: double.infinity,
-                                padding: EdgeInsets.all(12.w),
-                                margin: EdgeInsets.only(bottom: 16.h),
-                                decoration: BoxDecoration(
-                                  color: AppColors.error.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(8.r),
-                                  border: Border.all(color: AppColors.error.withOpacity(0.3)),
-                                ),
-                                child: Text(
-                                  authProvider.errorMessage!,
-                                  style: TextStyle(
-                                    fontSize: 14.sp,
-                                    color: AppColors.error,
-                                  ),
-                                ),
-                              );
-                            }
-                            return const SizedBox.shrink();
-                          },
-                        ),
-                        
-                        // Login Button
-                        Consumer<AuthProvider>(
-                          builder: (context, authProvider, child) {
-                            return LoadingButton(
-                              onPressed: _handleLogin,
-                              isLoading: authProvider.isLoading,
-                              text: 'Sign In',
-                            );
-                          },
-                        ),
-                        
-                        const Spacer(),
-                        
-                        // Sign Up Link
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              "Don't have an account? ",
-                              style: TextStyle(
-                                fontSize: 14.sp,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: () => context.go('/register'),
-                              child: Text(
-                                'Sign Up',
-                                style: TextStyle(
-                                  fontSize: 14.sp,
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 32.h),
-                      ],
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.symmetric(horizontal: 24.w),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: 16.h),
+                
+                // Title
+                Text(
+                  'Welcome Back',
+                  style: TextStyle(
+                    fontSize: 32.sp,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                
+                Text(
+                  'Sign in to continue your health journey',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                SizedBox(height: 32.h),
+                
+                // Email Field
+                CustomTextField(
+                  controller: _emailController,
+                  label: 'Email Address',
+                  keyboardType: TextInputType.emailAddress,
+                  validator: ValidationBuilder()
+                      .email('Please enter a valid email address')
+                      .required('Email is required')
+                      .build(),
+                ),
+                SizedBox(height: 24.h),
+                
+                // Password Field
+                CustomTextField(
+                  controller: _passwordController,
+                  label: 'Password',
+                  obscureText: _obscurePassword,
+                  onSubmitted: (_) => _handleLogin(),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                      color: AppColors.textSecondary,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
+                  ),
+                  validator: ValidationBuilder()
+                      .required('Password is required')
+                      .build(),
+                ),
+                SizedBox(height: 16.h),
+                
+                // Forgot Password
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: _showForgotPasswordDialog,
+                    child: Text(
+                      'Forgot Password?',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            );
-          },
+                SizedBox(height: 32.h),
+                
+                // Error Message
+                Consumer<AuthProvider>(
+                  builder: (context, authProvider, child) {
+                    if (authProvider.errorMessage != null) {
+                      return Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.all(12.w),
+                        margin: EdgeInsets.only(bottom: 16.h),
+                        decoration: BoxDecoration(
+                          color: AppColors.error.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8.r),
+                          border: Border.all(color: AppColors.error.withOpacity(0.3)),
+                        ),
+                        child: Text(
+                          authProvider.errorMessage!,
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            color: AppColors.error,
+                          ),
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
+                
+                // Login Button
+                Consumer<AuthProvider>(
+                  builder: (context, authProvider, child) {
+                    return LoadingButton(
+                      onPressed: _handleLogin,
+                      isLoading: authProvider.isLoading,
+                      text: 'Sign In',
+                    );
+                  },
+                ),
+                
+                SizedBox(height: 24.h),
+                
+                // Sign Up Link
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Don't have an account? ",
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => context.go('/register'),
+                      child: Text(
+                        'Sign Up',
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 60.h),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -287,7 +276,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             Navigator.of(context).pop();
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('Password reset email sent!'),
+                                content: const Text('Password reset email sent!'),
                                 backgroundColor: AppColors.success,
                               ),
                             );
