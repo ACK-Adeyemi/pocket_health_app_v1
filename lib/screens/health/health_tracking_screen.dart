@@ -45,7 +45,7 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(
-          'Health Tracking',
+          'Track',
           style: TextStyle(
             fontSize: 20.sp,
             fontWeight: FontWeight.w600,
@@ -368,6 +368,83 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
     final metrics = healthProvider.getMetricsForCondition(entry.conditionId);
     final metric = metrics.where((m) => m.id == entry.metricId).firstOrNull;
     
+    String conditionName = condition?.name ?? 'Unknown Condition';
+    String metricName = metric?.name ?? 'Unknown Metric';
+
+    // Apply mapping for Quick Check-In logic
+    if (entry.conditionId == 'wellbeing') {
+      conditionName = 'Wellbeing Log';
+    } else if (entry.conditionId == 'hypertension') {
+      conditionName = 'Heart / Blood Pressure';
+    } else if (entry.conditionId == 'heart_disease') {
+      conditionName = 'Heart Disease';
+    } else if (entry.conditionId == 'diabetes_type1') {
+      conditionName = 'Diabetes (Type 1)';
+    } else if (entry.conditionId == 'diabetes_type2') {
+      conditionName = 'Diabetes (Type 2)';
+    } else if (entry.conditionId == 'anxiety') {
+      conditionName = 'Anxiety';
+    } else if (entry.conditionId == 'thyroid') {
+      conditionName = 'Thyroid';
+    } else if (entry.conditionId == 'copd') {
+      conditionName = 'COPD';
+    } else if (entry.conditionId == 'asthma') {
+      conditionName = 'Asthma';
+    } else if (entry.conditionId == 'arthritis') {
+      conditionName = 'Arthritis';
+    } else if (entry.conditionId == 'depression') {
+      conditionName = 'Depression';
+    } else if (entry.conditionId == 'migraine') {
+      conditionName = 'Migraine';
+    } else if (entry.conditionId == 'obesity') {
+      conditionName = 'Obesity';
+    }
+
+    if (entry.source == 'quick') {
+      switch (entry.metricId) {
+        case 'overall':
+          metricName = 'How are you right now?';
+          break;
+        case 'heart_fatigue':
+          metricName = 'Level of tiredness';
+          break;
+        case 'heart_bp_feel':
+          metricName = 'Heart / BP felt...';
+          break;
+        case 'respiratory_status':
+          metricName = 'Breathing today?';
+          break;
+        case 'blood_sugar_feel':
+          metricName = 'Blood sugar felt...';
+          break;
+        case 'head_pain':
+          metricName = 'Head pain?';
+          break;
+        case 'anxiety_level':
+          metricName = 'Anxiety level?';
+          break;
+        case 'mood_today':
+          metricName = 'Mood today?';
+          break;
+        case 'energy_level':
+          metricName = 'Energy level?';
+          break;
+        case 'joint_pain':
+          metricName = 'Joint pain?';
+          break;
+        case 'today_felt':
+          metricName = 'Today felt...';
+          break;
+        case 'context':
+          metricName = 'What affected this?';
+          break;
+      }
+    }
+
+    if (entry.source == 'quick' && metricName == 'Unknown Metric') {
+      metricName = 'How it felt';
+    }
+
     return Container(
       margin: EdgeInsets.only(bottom: 8.h),
       child: Card(
@@ -396,7 +473,7 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      condition?.name ?? 'Unknown Condition',
+                      conditionName,
                       style: TextStyle(
                         fontSize: 14.sp,
                         fontWeight: FontWeight.w600,
@@ -405,7 +482,7 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
                     ),
                     SizedBox(height: 2.h),
                     Text(
-                      metric?.name ?? 'Unknown Metric',
+                      metricName,
                       style: TextStyle(
                         fontSize: 12.sp,
                         color: AppColors.textSecondary,
@@ -465,6 +542,35 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
     final entries = healthProvider.getEntriesForCondition(condition.id);
     final metrics = healthProvider.getMetricsForCondition(condition.id);
     
+    String conditionDisplayName = condition.name;
+    if (condition.id == 'hypertension') {
+      conditionDisplayName = 'Heart / Blood Pressure';
+    } else if (condition.id == 'diabetes_type1') {
+      conditionDisplayName = 'Diabetes (Type 1)';
+    } else if (condition.id == 'diabetes_type2') {
+      conditionDisplayName = 'Diabetes (Type 2)';
+    } else if (condition.id == 'wellbeing') {
+      conditionDisplayName = 'Wellbeing Log';
+    } else if (condition.id == 'anxiety') {
+      conditionDisplayName = 'Anxiety';
+    } else if (condition.id == 'thyroid') {
+      conditionDisplayName = 'Thyroid';
+    } else if (condition.id == 'heart_disease') {
+      conditionDisplayName = 'Heart Disease';
+    } else if (condition.id == 'copd') {
+      conditionDisplayName = 'COPD';
+    } else if (condition.id == 'asthma') {
+      conditionDisplayName = 'Asthma';
+    } else if (condition.id == 'arthritis') {
+      conditionDisplayName = 'Arthritis';
+    } else if (condition.id == 'depression') {
+      conditionDisplayName = 'Depression';
+    } else if (condition.id == 'migraine') {
+      conditionDisplayName = 'Migraine';
+    } else if (condition.id == 'obesity') {
+      conditionDisplayName = 'Obesity';
+    }
+
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
       child: Card(
@@ -499,7 +605,7 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            condition.name,
+                            conditionDisplayName,
                             style: TextStyle(
                               fontSize: 16.sp,
                               fontWeight: FontWeight.w600,
@@ -524,6 +630,10 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
                     ),
                   ],
                 ),
+                if (condition.takesMedication == true && condition.medicationStabilityMetric != null) ...[
+                  SizedBox(height: 16.h),
+                  _buildIndividualMedicationFeedback(condition),
+                ],
                 if (entries.isNotEmpty) ...[
                   SizedBox(height: 16.h),
                   Text(
@@ -542,21 +652,68 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
     );
   }
 
+  Widget _buildIndividualMedicationFeedback(HealthCondition condition) {
+    final isConsistent = condition.medicationStabilityMetric == 'yes';
+    
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+      decoration: BoxDecoration(
+        color: isConsistent ? Colors.green.withOpacity(0.1) : AppColors.primary.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8.r),
+        border: Border.all(
+          color: isConsistent ? Colors.green.withOpacity(0.3) : AppColors.primary.withOpacity(0.3),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            isConsistent ? Icons.star : Icons.info_outline,
+            size: 16.sp,
+            color: isConsistent ? Colors.green.shade700 : AppColors.primary,
+          ),
+          SizedBox(width: 8.w),
+          Expanded(
+            child: Text(
+              isConsistent 
+                ? 'Well done for being consistent with your meds!' 
+                : 'Keep going! Taking your meds regularly is key.',
+              style: TextStyle(
+                fontSize: 12.sp,
+                fontWeight: FontWeight.w600,
+                color: isConsistent ? Colors.green.shade800 : AppColors.primary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   IconData _getConditionIcon(String conditionId) {
     switch (conditionId) {
       case 'diabetes_type1':
       case 'diabetes_type2':
         return Icons.water_drop_outlined;
       case 'hypertension':
+      case 'heart_disease':
         return Icons.favorite_outline;
       case 'arthritis':
         return Icons.accessibility_new_outlined;
       case 'asthma':
+      case 'copd':
         return Icons.air_outlined;
       case 'depression':
         return Icons.psychology_outlined;
       case 'anxiety':
         return Icons.sentiment_very_dissatisfied_outlined;
+      case 'migraine':
+        return Icons.sensors;
+      case 'obesity':
+        return Icons.monitor_weight_outlined;
+      case 'thyroid':
+        return Icons.bolt;
+      case 'wellbeing':
+        return Icons.mood_outlined;
       default:
         return Icons.health_and_safety_outlined;
     }
@@ -603,4 +760,5 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
       _loadHealthData(); // Refresh data if needed
     }
   }
+
 }

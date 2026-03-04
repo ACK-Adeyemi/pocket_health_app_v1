@@ -7,6 +7,10 @@ class HealthCondition {
   final String? severity; // 'mild', 'moderate', 'severe'
   final String? category; // 'chronic', 'acute', 'mental_health', etc.
 
+  // New medication fields
+  final bool? takesMedication;
+  final String? medicationStabilityMetric; // 'yes', 'not_at_all', 'mostly', 'somewhat'
+
   HealthCondition({
     required this.id,
     required this.name,
@@ -15,6 +19,8 @@ class HealthCondition {
     required this.addedAt,
     this.severity,
     this.category,
+    this.takesMedication,
+    this.medicationStabilityMetric,
   });
 
   Map<String, dynamic> toMap() {
@@ -26,6 +32,8 @@ class HealthCondition {
       'addedAt': addedAt.toIso8601String(),
       'severity': severity,
       'category': category,
+      'takesMedication': takesMedication,
+      'medicationStabilityMetric': medicationStabilityMetric,
     };
   }
 
@@ -38,6 +46,8 @@ class HealthCondition {
       addedAt: DateTime.parse(map['addedAt'] ?? DateTime.now().toIso8601String()),
       severity: map['severity'],
       category: map['category'],
+      takesMedication: map['takesMedication'],
+      medicationStabilityMetric: map['medicationStabilityMetric'],
     );
   }
 
@@ -49,6 +59,8 @@ class HealthCondition {
     DateTime? addedAt,
     String? severity,
     String? category,
+    bool? takesMedication,
+    String? medicationStabilityMetric,
   }) {
     return HealthCondition(
       id: id ?? this.id,
@@ -58,6 +70,8 @@ class HealthCondition {
       addedAt: addedAt ?? this.addedAt,
       severity: severity ?? this.severity,
       category: category ?? this.category,
+      takesMedication: takesMedication ?? this.takesMedication,
+      medicationStabilityMetric: medicationStabilityMetric ?? this.medicationStabilityMetric,
     );
   }
 
@@ -107,7 +121,7 @@ class HealthCondition {
       HealthCondition(
         id: 'hypertension',
         name: 'High Blood Pressure',
-        description: 'A condition where blood pressure in the arteries is persistently elevated.',
+        description: 'A condition where blood pressure in the arteries is persistently elevated (also known as Hypertension).',
         addedAt: now,
         category: 'chronic',
         severity: 'moderate',
@@ -131,7 +145,7 @@ class HealthCondition {
       HealthCondition(
         id: 'depression',
         name: 'Depression',
-        description: 'A mental health disorder characterized by persistent sadness.',
+        description: 'A mental health disorder characterised by persistent sadness.',
         addedAt: now,
         category: 'mental_health',
         severity: 'moderate',
@@ -139,7 +153,7 @@ class HealthCondition {
       HealthCondition(
         id: 'anxiety',
         name: 'Anxiety Disorder',
-        description: 'A mental health disorder characterized by excessive worry or fear.',
+        description: 'A mental health disorder characterised by excessive worry or fear.',
         addedAt: now,
         category: 'mental_health',
         severity: 'mild',

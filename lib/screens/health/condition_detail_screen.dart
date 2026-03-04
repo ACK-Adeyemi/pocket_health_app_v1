@@ -251,6 +251,10 @@ class _ConditionDetailScreenState extends State<ConditionDetailScreen> {
                           color: AppColors.textSecondary,
                         ),
                       ),
+                      if (widget.condition.takesMedication != null) ...[
+                        SizedBox(height: 8.h),
+                        _buildMedicationBadge(widget.condition.takesMedication!),
+                      ],
                     ],
                   ),
                 ),
@@ -687,5 +691,25 @@ class _ConditionDetailScreenState extends State<ConditionDetailScreen> {
         .toSet();
     
     return uniqueDays.length;
+  }
+
+  Widget _buildMedicationBadge(bool takesMeds) {
+    const purple = Color(0xFF9C27B0);
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+      decoration: BoxDecoration(
+        color: purple.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: purple.withOpacity(0.5)),
+      ),
+      child: Text(
+        'Managed with Medication: ${takesMeds ? "YES" : "NO"}',
+        style: TextStyle(
+          fontSize: 10.sp,
+          fontWeight: FontWeight.bold,
+          color: purple,
+        ),
+      ),
+    );
   }
 }

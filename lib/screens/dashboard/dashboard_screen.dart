@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/quick_check_in_provider.dart';
+import '../../providers/health_tracking_provider.dart';
 import '../../models/user_profile.dart';
+import '../../models/health_entry.dart';
 import '../../utils/app_colors.dart';
 import '../health/health_tracking_screen.dart';
 import '../community/community_screen.dart';
@@ -24,12 +27,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    // Load user profile and check for onboarding when dashboard loads
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final userProvider = Provider.of<UserProvider>(context, listen: false);
-      await userProvider.loadUserProfileLegacy();
-      _checkOnboarding();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadData();
     });
+  }
+
+  Future<void> _loadData() async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    await userProvider.loadUserProfileLegacy();
+    _checkOnboarding();
+    
+    if (mounted && userProvider.userProfile != null) {
+      final healthProvider = Provider.of<HealthTrackingProvider>(context, listen: false);
+      await healthProvider.loadHealthEntries(userProvider.userProfile!.uid);
+    }
   }
 
   void _showQuickCheckIn() {
@@ -95,9 +106,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return Scaffold(
       body: IndexedStack(
-        index: _currentIndex > 2 ? _currentIndex - 1 : _currentIndex,
+        index: _currentIndex > 2 ? _currentIndex - 1 : (_currentIndex == 2 ? 0 : _currentIndex),
         children: [
-          _ProfileTab(onTabChange: _onTabChanged),
+          _ProfileTab(onTabChange: _onTabChanged, onRefresh: _loadData),
           const HealthTrackingScreen(),
           const CommunityScreen(),
           const _LearnTab(),
@@ -132,7 +143,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           BottomNavigationBarItem(
             icon: const Icon(Icons.favorite_outline),
             activeIcon: const Icon(Icons.favorite),
-            label: isGroupA ? 'Full Log' : 'Track',
+            label: 'Track',
           ),
           BottomNavigationBarItem(
             icon: Container(
@@ -167,13 +178,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
 class _ProfileTab extends StatelessWidget {
   final Function(int) onTabChange;
+  final Future<void> Function() onRefresh;
 
-  const _ProfileTab({required this.onTabChange});
+  const _ProfileTab({required this.onTabChange, required this.onRefresh});
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      color: AppColors.primary,
       child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: EdgeInsets.all(24.w),
         child: Consumer<UserProvider>(
           builder: (context, userProvider, child) {
@@ -182,380 +197,397 @@ class _ProfileTab extends StatelessWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header: Greeting/Info and Profile Icon/Badge
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Good ${_getGreeting()}!',
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                          SizedBox(height: 8.h),
-                          Text(
-                            user?.name ?? 'Welcome',
-                            style: TextStyle(
-                              fontSize: 24.sp,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          if (user != null) ...[
-                            Text(
-                              user.email,
-                              style: TextStyle(
-                                fontSize: 14.sp,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                    Column(
-                      children: [
-                        Container(
-                          width: 64.w,
-                          height: 64.w,
-                          decoration: BoxDecoration(
-                            gradient: AppColors.primaryGradient,
-                            borderRadius: BorderRadius.circular(32.r),
-                          ),
-                          child: Icon(
-                            Icons.person,
-                            color: Colors.white,
-                            size: 32.sp,
-                          ),
-                        ),
-                        if (user != null && (user.role == UserRole.admin || user.role == UserRole.moderator)) ...[
-                          SizedBox(height: 8.h),
-                          Container(
-                            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                            decoration: BoxDecoration(
-                              color: user.role == UserRole.admin
-                                  ? AppColors.accent.withOpacity(0.1)
-                                  : AppColors.primary.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12.r),
-                              border: Border.all(
-                                color: user.role == UserRole.admin ? AppColors.accent : AppColors.primary,
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  user.role == UserRole.admin ? Icons.admin_panel_settings : Icons.verified_user,
-                                  size: 14.sp,
-                                  color: user.role == UserRole.admin ? AppColors.accentDark : AppColors.primary,
-                                ),
-                                SizedBox(width: 4.w),
-                                Text(
-                                  user.role.value.toUpperCase(),
-                                  style: TextStyle(
-                                    fontSize: 12.sp,
-                                    fontWeight: FontWeight.bold,
-                                    color: user.role == UserRole.admin ? AppColors.accentDark : AppColors.primary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ],
-                ),
+                _buildHeader(user),
                 SizedBox(height: 32.h),
-
-                // Health Overview Card
                 if (user != null) ...[
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.all(20.w),
-                    decoration: BoxDecoration(
-                      gradient: AppColors.primaryGradient,
-                      borderRadius: BorderRadius.circular(16.r),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary.withOpacity(0.3),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Health Overview',
-                          style: TextStyle(
-                            fontSize: 18.sp,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                        SizedBox(height: 16.h),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _HealthMetric(
-                                label: 'BMI',
-                                value: user.bmi.toStringAsFixed(1),
-                                subtitle: user.bmiCategory,
-                              ),
-                            ),
-                            Expanded(
-                              child: _HealthMetric(
-                                label: 'Age',
-                                value: user.age.toString(),
-                                subtitle: 'years',
-                              ),
-                            ),
-                            Expanded(
-                              child: _HealthMetric(
-                                label: 'Conditions',
-                                value: user.healthConditions.length.toString(),
-                                subtitle: 'tracked',
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
+                  _buildHealthOverview(user),
+                  SizedBox(height: 16.h),
+                  const _WellbeingSnapshotCard(),
                   SizedBox(height: 24.h),
                 ],
-
-                // Daily Pulse / Quick Check-In Card
-                Consumer<QuickCheckInProvider>(
-                  builder: (context, quickProvider, child) {
-                    final metric = quickProvider.selectedMetric;
-                    if (metric == null) return const SizedBox.shrink();
-
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Daily Pulse',
-                          style: TextStyle(
-                            fontSize: 20.sp,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        SizedBox(height: 16.h),
-                        Container(
-                          width: double.infinity,
-                          padding: EdgeInsets.all(20.w),
-                          decoration: BoxDecoration(
-                            color: metric.color.withOpacity(0.05),
-                            borderRadius: BorderRadius.circular(16.r),
-                            border: Border.all(color: metric.color.withOpacity(0.2)),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: EdgeInsets.all(12.w),
-                                decoration: BoxDecoration(
-                                  color: metric.color.withOpacity(0.1),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(metric.icon, color: metric.color, size: 28.sp),
-                              ),
-                              SizedBox(width: 16.w),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Quick Check-In',
-                                      style: TextStyle(
-                                        fontSize: 14.sp,
-                                        fontWeight: FontWeight.w500,
-                                        color: metric.color,
-                                      ),
-                                    ),
-                                    Text(
-                                      'Log your ${quickProvider.selectedCondition?.name ?? "health"}',
-                                      style: TextStyle(
-                                        fontSize: 16.sp,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppColors.textPrimary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              ElevatedButton(
-                                onPressed: () => QuickCheckInModal.show(context),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: metric.color,
-                                  minimumSize: Size(80.w, 36.h),
-                                  padding: EdgeInsets.symmetric(horizontal: 16.w),
-                                ),
-                                child: const Text('Start'),
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: 32.h),
-                      ],
-                    );
-                  },
-                ),
-
-                // Quick Actions
-                Text(
-                  'Quick Actions',
-                  style: TextStyle(
-                    fontSize: 20.sp,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                SizedBox(height: 16.h),
-
-                GridView.count(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 16.w,
-                  mainAxisSpacing: 16.h,
-                  childAspectRatio: 1.2,
-                  children: [
-                    _QuickActionCard(
-                      icon: Icons.add_circle_outline,
-                      title: 'Log Health Data',
-                      subtitle: 'Track symptoms, vitals',
-                      color: AppColors.secondary,
-                      onTap: () {
-                        if (user?.preferredLoggingMode == 'quick') {
-                          // TODO: Might remove this
-                          QuickCheckInModal.show(context);
-                        } else {
-                          // Standard multi-metric logging
-                          onTabChange(1);
-                        }
-                      },
-                    ),
-                    _QuickActionCard(
-                      icon: Icons.calendar_today,
-                      title: 'Appointments',
-                      subtitle: 'Manage schedule',
-                      color: AppColors.accent,
-                      onTap: () {
-                        // TODO: Navigate to appointments
-                      },
-                    ),
-                    _QuickActionCard(
-                      icon: Icons.school,
-                      title: 'Learn',
-                      subtitle: 'Health education',
-                      color: AppColors.info,
-                      onTap: () => onTabChange(4),
-                    ),
-                    _QuickActionCard(
-                      icon: Icons.chat_bubble_outline,
-                      title: 'Discuss',
-                      subtitle: 'Connect & share',
-                      color: AppColors.primary,
-                      onTap: () => onTabChange(3),
-                    ),
-                  ],
-                ),
+                _buildDailyPulseCard(context),
+                _buildQuickActions(context, user),
                 SizedBox(height: 24.h),
-
-                // Recent Activity
-                Text(
-                  'Recent Activity',
-                  style: TextStyle(
-                    fontSize: 20.sp,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                SizedBox(height: 16.h),
-
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.all(20.w),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12.r),
-                    border: Border.all(color: AppColors.grey200),
-                  ),
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.timeline,
-                        size: 48.sp,
-                        color: AppColors.textSecondary,
-                      ),
-                      SizedBox(height: 16.h),
-                      Text(
-                        'No recent activity',
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      SizedBox(height: 8.h),
-                      Text(
-                        'Start logging your health data to see your progress here.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                _buildRecentActivity(),
                 SizedBox(height: 32.h),
-
-                // Sign Out Button
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    onPressed: () async {
-                      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-                      final userProvider = Provider.of<UserProvider>(context, listen: false);
-
-                      await authProvider.signOut();
-                      userProvider.clearUserProfile();
-
-                      if (context.mounted) {
-                        context.go('/welcome');
-                      }
-                    },
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AppColors.error),
-                      minimumSize: Size(double.infinity, 48.h),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                    ),
-                    child: Text(
-                      'Sign Out',
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.error,
-                      ),
-                    ),
-                  ),
-                ),
+                _buildSignOutButton(context),
                 SizedBox(height: 24.h),
               ],
             );
           },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(UserProfile? user) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Good ${_getGreeting()}!',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              SizedBox(height: 8.h),
+              Text(
+                user?.name ?? 'Welcome',
+                style: TextStyle(
+                  fontSize: 24.sp,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              if (user != null) ...[
+                Text(
+                  user.email,
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        Column(
+          children: [
+            Container(
+              width: 64.w,
+              height: 64.w,
+              decoration: BoxDecoration(
+                gradient: AppColors.primaryGradient,
+                borderRadius: BorderRadius.circular(32.r),
+              ),
+              child: Icon(
+                Icons.person,
+                color: Colors.white,
+                size: 32.sp,
+              ),
+            ),
+            if (user != null && (user.role == UserRole.admin || user.role == UserRole.moderator)) ...[
+              SizedBox(height: 8.h),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                decoration: BoxDecoration(
+                  color: user.role == UserRole.admin
+                      ? AppColors.accent.withOpacity(0.1)
+                      : AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12.r),
+                  border: Border.all(
+                    color: user.role == UserRole.admin ? AppColors.accent : AppColors.primary,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      user.role == UserRole.admin ? Icons.admin_panel_settings : Icons.verified_user,
+                      size: 14.sp,
+                      color: user.role == UserRole.admin ? AppColors.accentDark : AppColors.primary,
+                    ),
+                    SizedBox(width: 4.w),
+                    Text(
+                      user.role.value.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.bold,
+                        color: user.role == UserRole.admin ? AppColors.accentDark : AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHealthOverview(UserProfile user) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(20.w),
+      decoration: BoxDecoration(
+        gradient: AppColors.primaryGradient,
+        borderRadius: BorderRadius.circular(16.r),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Health Overview',
+            style: TextStyle(
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+          SizedBox(height: 16.h),
+          Row(
+            children: [
+              Expanded(
+                child: _HealthMetric(
+                  label: 'BMI',
+                  value: user.bmi.toStringAsFixed(1),
+                  subtitle: user.bmiCategory,
+                ),
+              ),
+              Expanded(
+                child: _HealthMetric(
+                  label: 'Age',
+                  value: user.age.toString(),
+                  subtitle: 'years',
+                ),
+              ),
+              Expanded(
+                child: _HealthMetric(
+                  label: 'Conditions',
+                  value: user.healthConditions.length.toString(),
+                  subtitle: 'tracked',
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDailyPulseCard(BuildContext context) {
+    return Consumer<QuickCheckInProvider>(
+      builder: (context, quickProvider, child) {
+        final condition = quickProvider.selectedCondition;
+        if (condition == null) return const SizedBox.shrink();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Daily Pulse',
+              style: TextStyle(
+                fontSize: 20.sp,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            SizedBox(height: 16.h),
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(20.w),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(16.r),
+                border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(12.w),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.bolt, color: AppColors.primary, size: 28.sp),
+                  ),
+                  SizedBox(width: 16.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Quick Check-In',
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        Text(
+                          'Log your ${condition.name}',
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => QuickCheckInModal.show(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      minimumSize: Size(80.w, 36.h),
+                      padding: EdgeInsets.symmetric(horizontal: 16.w),
+                    ),
+                    child: const Text('Start'),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 32.h),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildQuickActions(BuildContext context, UserProfile? user) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Quick Actions',
+          style: TextStyle(
+            fontSize: 20.sp,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        SizedBox(height: 16.h),
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 2,
+          crossAxisSpacing: 16.w,
+          mainAxisSpacing: 16.h,
+          childAspectRatio: 1.2,
+          children: [
+            _QuickActionCard(
+              icon: Icons.add_circle_outline,
+              title: 'Log Health Data',
+              subtitle: 'Track symptoms, vitals',
+              color: AppColors.secondary,
+              onTap: () {
+                if (user?.preferredLoggingMode == 'quick') {
+                  QuickCheckInModal.show(context);
+                } else {
+                  onTabChange(1);
+                }
+              },
+            ),
+            _QuickActionCard(
+              icon: Icons.calendar_today,
+              title: 'Appointments',
+              subtitle: 'Manage schedule',
+              color: AppColors.accent,
+              onTap: () {},
+            ),
+            _QuickActionCard(
+              icon: Icons.school,
+              title: 'Learn',
+              subtitle: 'Health education',
+              color: AppColors.info,
+              onTap: () => onTabChange(4),
+            ),
+            _QuickActionCard(
+              icon: Icons.chat_bubble_outline,
+              title: 'Discuss',
+              subtitle: 'Connect & share',
+              color: AppColors.primary,
+              onTap: () => onTabChange(3),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRecentActivity() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Recent Activity',
+          style: TextStyle(
+            fontSize: 20.sp,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        SizedBox(height: 16.h),
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(20.w),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(color: AppColors.grey200),
+          ),
+          child: Column(
+            children: [
+              Icon(
+                Icons.timeline,
+                size: 48.sp,
+                color: AppColors.textSecondary,
+              ),
+              SizedBox(height: 16.h),
+              Text(
+                'No recent activity',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              SizedBox(height: 8.h),
+              Text(
+                'Start logging your health data to see your progress here.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSignOutButton(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton(
+        onPressed: () async {
+          final authProvider = Provider.of<AuthProvider>(context, listen: false);
+          final userProvider = Provider.of<UserProvider>(context, listen: false);
+          await authProvider.signOut();
+          userProvider.clearUserProfile();
+          if (context.mounted) {
+            context.go('/welcome');
+          }
+        },
+        style: OutlinedButton.styleFrom(
+          side: const BorderSide(color: AppColors.error),
+          minimumSize: Size(double.infinity, 48.h),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.r),
+          ),
+        ),
+        child: Text(
+          'Sign Out',
+          style: TextStyle(
+            fontSize: 16.sp,
+            fontWeight: FontWeight.w600,
+            color: AppColors.error,
+          ),
         ),
       ),
     );
@@ -566,6 +598,96 @@ class _ProfileTab extends StatelessWidget {
     if (hour < 12) return 'morning';
     if (hour < 17) return 'afternoon';
     return 'evening';
+  }
+}
+
+class _WellbeingSnapshotCard extends StatelessWidget {
+  const _WellbeingSnapshotCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer2<HealthTrackingProvider, UserProvider>(
+      builder: (context, healthProvider, userProvider, child) {
+        final entries = healthProvider.getEntriesForCondition('wellbeing')
+            .where((e) => e.metricId == 'overall')
+            .toList();
+        
+        final last7Days = List.generate(7, (index) {
+          final date = DateTime.now().subtract(Duration(days: 6 - index));
+          final entry = entries.firstWhere(
+            (e) => e.timestamp.year == date.year && 
+                   e.timestamp.month == date.month && 
+                   e.timestamp.day == date.day,
+            orElse: () => HealthEntry(
+              id: '', userId: '', conditionId: '', metricId: '', value: null, timestamp: date,
+            ),
+          );
+          return {'date': date, 'value': entry.value};
+        });
+
+        return Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: AppColors.grey200),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Wellbeing 7 Day Snapshot',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              SizedBox(height: 16.h),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: last7Days.map((day) {
+                  final date = day['date'] as DateTime;
+                  final value = day['value'] as String?;
+                  final dayLabel = DateFormat('E').format(date).substring(0, 3).toUpperCase();
+                  
+                  String emoji = '';
+                  if (value == 'good') emoji = '😊\u{FE0F}';
+                  else if (value == 'okay') emoji = '😐\u{FE0F}';
+                  else if (value == 'not_great') emoji = '😟\u{FE0F}';
+
+                  return Column(
+                    children: [
+                      Text(
+                        dayLabel,
+                        style: TextStyle(
+                          fontSize: 10.sp,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      SizedBox(height: 8.h),
+                      if (emoji.isNotEmpty)
+                        Text(emoji, style: TextStyle(fontSize: 24.sp))
+                      else
+                        Container(
+                          width: 24.w,
+                          height: 24.w,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: AppColors.grey200, width: 2),
+                          ),
+                        ),
+                    ],
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }
 

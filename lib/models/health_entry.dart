@@ -22,8 +22,7 @@ class HealthEntry {
   });
 
   Map<String, dynamic> toMap() {
-    return {
-      'id': id,
+    final Map<String, dynamic> data = {
       'userId': userId,
       'conditionId': conditionId,
       'metricId': metricId,
@@ -33,6 +32,13 @@ class HealthEntry {
       'source': source,
       'additionalData': additionalData,
     };
+    
+    // Only include ID if it's not empty (prevents saving id: "" to Firestore)
+    if (id.isNotEmpty) {
+      data['id'] = id;
+    }
+    
+    return data;
   }
 
   factory HealthEntry.fromMap(Map<String, dynamic> map) {
@@ -97,9 +103,18 @@ class HealthEntry {
   // Helper method to format value for display
   String getDisplayValue() {
     if (value is List) {
-      return (value as List).join(', ');
+      return (value as List).map((e) => _capitalize(e.toString())).join(', ');
     }
-    return value.toString();
+    String val = value.toString();
+    if (val.isEmpty) return 'N/A';
+    return _capitalize(val);
+  }
+
+  String _capitalize(String s) {
+    if (s.isEmpty) return s;
+    // Replace underscores with spaces and capitalize
+    String formatted = s.replaceAll('_', ' ');
+    return formatted[0].toUpperCase() + formatted.substring(1);
   }
 
   @override
