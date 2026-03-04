@@ -36,6 +36,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     QuickCheckInModal.show(context);
   }
 
+  void _onTabChanged(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
   void _checkOnboarding() {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final userProfile = userProvider.userProfile;
@@ -90,11 +96,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex > 2 ? _currentIndex - 1 : _currentIndex,
-        children: const [
-          _HomeTab(),
-          HealthTrackingScreen(),
-          CommunityScreen(),
-          _ProfileTab(),
+        children: [
+          _ProfileTab(onTabChange: _onTabChanged),
+          const HealthTrackingScreen(),
+          const CommunityScreen(),
+          const _LearnTab(),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -103,9 +109,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           if (index == 2) {
             _showQuickCheckIn();
           } else {
-            setState(() {
-              _currentIndex = index;
-            });
+            _onTabChanged(index);
           }
         },
         type: BottomNavigationBarType.fixed,
@@ -121,14 +125,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         items: [
           const BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Home',
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
+            label: 'Profile',
           ),
           BottomNavigationBarItem(
             icon: const Icon(Icons.favorite_outline),
             activeIcon: const Icon(Icons.favorite),
-            label: isGroupA ? 'Full Log' : 'Health',
+            label: isGroupA ? 'Full Log' : 'Track',
           ),
           BottomNavigationBarItem(
             icon: Container(
@@ -148,12 +152,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const BottomNavigationBarItem(
             icon: Icon(Icons.people_outline),
             activeIcon: Icon(Icons.people),
-            label: 'Community',
+            label: 'Discuss',
           ),
           const BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Profile',
+            icon: Icon(Icons.school_outlined),
+            activeIcon: Icon(Icons.school),
+            label: 'Learn',
           ),
         ],
       ),
@@ -161,8 +165,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
-class _HomeTab extends StatelessWidget {
-  const _HomeTab();
+class _ProfileTab extends StatelessWidget {
+  final Function(int) onTabChange;
+
+  const _ProfileTab({required this.onTabChange});
 
   @override
   Widget build(BuildContext context) {
@@ -172,12 +178,13 @@ class _HomeTab extends StatelessWidget {
         child: Consumer<UserProvider>(
           builder: (context, userProvider, child) {
             final user = userProvider.userProfile;
-            
+
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header
+                // Header: Greeting/Info and Profile Icon/Badge
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
                       child: Column(
@@ -190,6 +197,7 @@ class _HomeTab extends StatelessWidget {
                               color: AppColors.textSecondary,
                             ),
                           ),
+                          SizedBox(height: 8.h),
                           Text(
                             user?.name ?? 'Welcome',
                             style: TextStyle(
@@ -198,27 +206,74 @@ class _HomeTab extends StatelessWidget {
                               color: AppColors.textPrimary,
                             ),
                           ),
+                          if (user != null) ...[
+                            Text(
+                              user.email,
+                              style: TextStyle(
+                                fontSize: 14.sp,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),
-                    Container(
-                      width: 48.w,
-                      height: 48.w,
-                      decoration: BoxDecoration(
-                        gradient: AppColors.primaryGradient,
-                        borderRadius: BorderRadius.circular(24.r),
-                      ),
-                      child: Icon(
-                        Icons.person,
-                        color: Colors.white,
-                        size: 24.sp,
-                      ),
+                    Column(
+                      children: [
+                        Container(
+                          width: 64.w,
+                          height: 64.w,
+                          decoration: BoxDecoration(
+                            gradient: AppColors.primaryGradient,
+                            borderRadius: BorderRadius.circular(32.r),
+                          ),
+                          child: Icon(
+                            Icons.person,
+                            color: Colors.white,
+                            size: 32.sp,
+                          ),
+                        ),
+                        if (user != null && (user.role == UserRole.admin || user.role == UserRole.moderator)) ...[
+                          SizedBox(height: 8.h),
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                            decoration: BoxDecoration(
+                              color: user.role == UserRole.admin
+                                  ? AppColors.accent.withOpacity(0.1)
+                                  : AppColors.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12.r),
+                              border: Border.all(
+                                color: user.role == UserRole.admin ? AppColors.accent : AppColors.primary,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  user.role == UserRole.admin ? Icons.admin_panel_settings : Icons.verified_user,
+                                  size: 14.sp,
+                                  color: user.role == UserRole.admin ? AppColors.accentDark : AppColors.primary,
+                                ),
+                                SizedBox(width: 4.w),
+                                Text(
+                                  user.role.value.toUpperCase(),
+                                  style: TextStyle(
+                                    fontSize: 12.sp,
+                                    fontWeight: FontWeight.bold,
+                                    color: user.role == UserRole.admin ? AppColors.accentDark : AppColors.primary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ],
                 ),
                 SizedBox(height: 32.h),
-                
-                // Health Summary Card
+
+                // Health Overview Card
                 if (user != null) ...[
                   Container(
                     width: double.infinity,
@@ -276,7 +331,7 @@ class _HomeTab extends StatelessWidget {
                   ),
                   SizedBox(height: 24.h),
                 ],
-                
+
                 // Daily Pulse / Quick Check-In Card
                 Consumer<QuickCheckInProvider>(
                   builder: (context, quickProvider, child) {
@@ -365,7 +420,7 @@ class _HomeTab extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 16.h),
-                
+
                 GridView.count(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
@@ -381,10 +436,11 @@ class _HomeTab extends StatelessWidget {
                       color: AppColors.secondary,
                       onTap: () {
                         if (user?.preferredLoggingMode == 'quick') {
+                          // TODO: Might remove this
                           QuickCheckInModal.show(context);
                         } else {
                           // Standard multi-metric logging
-                          // context.push('/health/add-entry'); 
+                          onTabChange(1);
                         }
                       },
                     ),
@@ -402,23 +458,19 @@ class _HomeTab extends StatelessWidget {
                       title: 'Learn',
                       subtitle: 'Health education',
                       color: AppColors.info,
-                      onTap: () {
-                        // TODO: Navigate to education
-                      },
+                      onTap: () => onTabChange(4),
                     ),
                     _QuickActionCard(
                       icon: Icons.chat_bubble_outline,
-                      title: 'Community',
+                      title: 'Discuss',
                       subtitle: 'Connect & share',
                       color: AppColors.primary,
-                      onTap: () {
-                        // TODO: Navigate to community
-                      },
+                      onTap: () => onTabChange(3),
                     ),
                   ],
                 ),
                 SizedBox(height: 24.h),
-                
+
                 // Recent Activity
                 Text(
                   'Recent Activity',
@@ -429,7 +481,7 @@ class _HomeTab extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 16.h),
-                
+
                 Container(
                   width: double.infinity,
                   padding: EdgeInsets.all(20.w),
@@ -466,6 +518,41 @@ class _HomeTab extends StatelessWidget {
                     ],
                   ),
                 ),
+                SizedBox(height: 32.h),
+
+                // Sign Out Button
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: () async {
+                      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                      final userProvider = Provider.of<UserProvider>(context, listen: false);
+
+                      await authProvider.signOut();
+                      userProvider.clearUserProfile();
+
+                      if (context.mounted) {
+                        context.go('/welcome');
+                      }
+                    },
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: AppColors.error),
+                      minimumSize: Size(double.infinity, 48.h),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                    ),
+                    child: Text(
+                      'Sign Out',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.error,
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 24.h),
               ],
             );
           },
@@ -482,144 +569,63 @@ class _HomeTab extends StatelessWidget {
   }
 }
 
-
-
-
-class _ProfileTab extends StatelessWidget {
-  const _ProfileTab();
+class _LearnTab extends StatelessWidget {
+  const _LearnTab();
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
+      child: Padding(
         padding: EdgeInsets.all(24.w),
-        child: Consumer<UserProvider>(
-          builder: (context, userProvider, child) {
-            final user = userProvider.userProfile;
-            
-            return Column(
-              children: [
-                Text(
-                  'Profile',
-                  style: TextStyle(
-                    fontSize: 24.sp,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                SizedBox(height: 32.h),
-                
-                if (user != null) ...[
-                  Container(
-                    width: 80.w,
-                    height: 80.w,
-                    decoration: BoxDecoration(
-                      gradient: AppColors.primaryGradient,
-                      borderRadius: BorderRadius.circular(40.r),
-                    ),
-                    child: Icon(
-                      Icons.person,
-                      color: Colors.white,
-                      size: 40.sp,
-                    ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Learn',
+              style: TextStyle(
+                fontSize: 24.sp,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            SizedBox(height: 24.h),
+            Text(
+              'Welcome to the Learn section! Here you can find seminars and videos to help you understand and manage your specific health conditions.',
+              style: TextStyle(
+                fontSize: 16.sp,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            SizedBox(height: 16.h),
+            Text(
+              'Learn about typical symptoms, management strategies for when you\'re alone, and when to consult your GP. We also provide education to help you identify and avoid health misinformation.',
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            SizedBox(height: 48.h),
+            Center(
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.school_outlined,
+                    size: 64.sp,
+                    color: AppColors.primary.withOpacity(0.5),
                   ),
                   SizedBox(height: 16.h),
-                  
                   Text(
-                    user.name,
+                    'Coming Soon',
                     style: TextStyle(
-                      fontSize: 20.sp,
+                      fontSize: 18.sp,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  SizedBox(height: 8.h),
-                  
-                  Text(
-                    user.email,
-                    style: TextStyle(
-                      fontSize: 14.sp,
                       color: AppColors.textSecondary,
                     ),
                   ),
-                  if (user.role == UserRole.admin || user.role == UserRole.moderator) ...[
-                    SizedBox(height: 12.h),
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
-                      decoration: BoxDecoration(
-                        color: user.role == UserRole.admin 
-                            ? AppColors.accent.withOpacity(0.1) 
-                            : AppColors.primary.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12.r),
-                        border: Border.all(
-                          color: user.role == UserRole.admin 
-                              ? AppColors.accent 
-                              : AppColors.primary,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            user.role == UserRole.admin ? Icons.admin_panel_settings : Icons.verified_user,
-                            size: 14.sp,
-                            color: user.role == UserRole.admin ? AppColors.accentDark : AppColors.primary,
-                          ),
-                          SizedBox(width: 4.w),
-                          Text(
-                            user.role.value.toUpperCase(),
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              fontWeight: FontWeight.bold,
-                              color: user.role == UserRole.admin ? AppColors.accentDark : AppColors.primary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                  SizedBox(height: 32.h),
                 ],
-                
-                SizedBox(height: 48.h),
-                
-                // Sign Out Button
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    onPressed: () async {
-                      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-                      final userProvider = Provider.of<UserProvider>(context, listen: false);
-                      
-                      await authProvider.signOut();
-                      userProvider.clearUserProfile();
-                      
-                      if (context.mounted) {
-                        context.go('/welcome');
-                      }
-                    },
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: AppColors.error),
-                      minimumSize: Size(double.infinity, 48.h),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                    ),
-                    child: Text(
-                      'Sign Out',
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.error,
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 60.h),
-              ],
-            );
-          },
+              ),
+            ),
+          ],
         ),
       ),
     );

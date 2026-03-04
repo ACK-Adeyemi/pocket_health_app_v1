@@ -170,7 +170,7 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
             ),
             SizedBox(height: 12.h),
             Text(
-              'Add health conditions in your profile to start tracking your health metrics.',
+              'Add health conditions in your profile to start tracking your health metrics, or click the refresh icon to reload your data.',
               style: TextStyle(
                 fontSize: 14.sp,
                 color: AppColors.textSecondary,
