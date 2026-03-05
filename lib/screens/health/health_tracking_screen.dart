@@ -227,6 +227,8 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
   Widget _buildQuickActionCard(HealthCondition condition, HealthTrackingProvider healthProvider) {
     final metrics = healthProvider.getMetricsForCondition(condition.id);
     final primaryMetric = metrics.isNotEmpty ? metrics.first : null;
+    final staticData = HealthCondition.getStaticCondition(condition.id);
+    final displayName = staticData?.name ?? condition.name;
     
     return Container(
       width: 140.w,
@@ -249,7 +251,7 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
                 ),
                 SizedBox(height: 8.h),
                 Text(
-                  condition.name,
+                  displayName,
                   style: TextStyle(
                     fontSize: 12.sp,
                     fontWeight: FontWeight.w600,
@@ -367,37 +369,13 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
     final condition = healthProvider.getConditionById(entry.conditionId);
     final metrics = healthProvider.getMetricsForCondition(entry.conditionId);
     final metric = metrics.where((m) => m.id == entry.metricId).firstOrNull;
+    final staticData = HealthCondition.getStaticCondition(entry.conditionId);
     
-    String conditionName = condition?.name ?? 'Unknown Condition';
+    String conditionName = staticData?.name ?? (condition?.name ?? 'Unknown Condition');
     String metricName = metric?.name ?? 'Unknown Metric';
 
-    // Apply mapping for Quick Check-In logic
     if (entry.conditionId == 'wellbeing') {
       conditionName = 'Wellbeing Log';
-    } else if (entry.conditionId == 'hypertension') {
-      conditionName = 'Heart / Blood Pressure';
-    } else if (entry.conditionId == 'heart_disease') {
-      conditionName = 'Heart Disease';
-    } else if (entry.conditionId == 'diabetes_type1') {
-      conditionName = 'Diabetes (Type 1)';
-    } else if (entry.conditionId == 'diabetes_type2') {
-      conditionName = 'Diabetes (Type 2)';
-    } else if (entry.conditionId == 'anxiety') {
-      conditionName = 'Anxiety';
-    } else if (entry.conditionId == 'thyroid') {
-      conditionName = 'Thyroid';
-    } else if (entry.conditionId == 'copd') {
-      conditionName = 'COPD';
-    } else if (entry.conditionId == 'asthma') {
-      conditionName = 'Asthma';
-    } else if (entry.conditionId == 'arthritis') {
-      conditionName = 'Arthritis';
-    } else if (entry.conditionId == 'depression') {
-      conditionName = 'Depression';
-    } else if (entry.conditionId == 'migraine') {
-      conditionName = 'Migraine';
-    } else if (entry.conditionId == 'obesity') {
-      conditionName = 'Obesity';
     }
 
     if (entry.source == 'quick') {
@@ -541,34 +519,12 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
   Widget _buildConditionCard(HealthCondition condition, HealthTrackingProvider healthProvider) {
     final entries = healthProvider.getEntriesForCondition(condition.id);
     final metrics = healthProvider.getMetricsForCondition(condition.id);
+    final staticData = HealthCondition.getStaticCondition(condition.id);
     
-    String conditionDisplayName = condition.name;
-    if (condition.id == 'hypertension') {
-      conditionDisplayName = 'Heart / Blood Pressure';
-    } else if (condition.id == 'diabetes_type1') {
-      conditionDisplayName = 'Diabetes (Type 1)';
-    } else if (condition.id == 'diabetes_type2') {
-      conditionDisplayName = 'Diabetes (Type 2)';
-    } else if (condition.id == 'wellbeing') {
+    String conditionDisplayName = staticData?.name ?? condition.name;
+    
+    if (condition.id == 'wellbeing') {
       conditionDisplayName = 'Wellbeing Log';
-    } else if (condition.id == 'anxiety') {
-      conditionDisplayName = 'Anxiety';
-    } else if (condition.id == 'thyroid') {
-      conditionDisplayName = 'Thyroid';
-    } else if (condition.id == 'heart_disease') {
-      conditionDisplayName = 'Heart Disease';
-    } else if (condition.id == 'copd') {
-      conditionDisplayName = 'COPD';
-    } else if (condition.id == 'asthma') {
-      conditionDisplayName = 'Asthma';
-    } else if (condition.id == 'arthritis') {
-      conditionDisplayName = 'Arthritis';
-    } else if (condition.id == 'depression') {
-      conditionDisplayName = 'Depression';
-    } else if (condition.id == 'migraine') {
-      conditionDisplayName = 'Migraine';
-    } else if (condition.id == 'obesity') {
-      conditionDisplayName = 'Obesity';
     }
 
     return Container(

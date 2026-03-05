@@ -98,6 +98,17 @@ class HealthCondition {
         isTracking.hashCode;
   }
 
+  /// Returns the static 'official' version of a condition by its ID.
+  /// Use this for display metadata (name, description, category, severity)
+  /// to ensure updates propagate to all users.
+  static HealthCondition? getStaticCondition(String id) {
+    try {
+      return getCommonConditions().firstWhere((c) => c.id == id);
+    } catch (_) {
+      return null;
+    }
+  }
+
   // Static list of common health conditions for the onboarding flow
   static List<HealthCondition> getCommonConditions() {
     final now = DateTime.now();

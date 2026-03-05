@@ -392,12 +392,19 @@ class _AddHealthEntryScreenState extends State<AddHealthEntryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final staticData = HealthCondition.getStaticCondition(widget.condition.id);
+    String displayName = staticData?.name ?? widget.condition.name;
+    
+    if (widget.condition.id == 'wellbeing') {
+      displayName = 'Wellbeing Log';
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: Text(
-          'Add ${widget.condition.name} Entry',
+          'Add $displayName Entry',
           style: TextStyle(
             fontSize: 18.sp,
             fontWeight: FontWeight.w600,

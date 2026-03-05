@@ -9,6 +9,7 @@ import '../../providers/quick_check_in_provider.dart';
 import '../../providers/health_tracking_provider.dart';
 import '../../models/user_profile.dart';
 import '../../models/health_entry.dart';
+import '../../models/health_condition.dart';
 import '../../utils/app_colors.dart';
 import '../health/health_tracking_screen.dart';
 import '../community/community_screen.dart';
@@ -372,7 +373,7 @@ class _ProfileTab extends StatelessWidget {
     return Consumer<QuickCheckInProvider>(
       builder: (context, quickProvider, child) {
         final condition = quickProvider.selectedCondition;
-        if (condition == null) return const SizedBox.shrink();
+        final streak = quickProvider.streak;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -386,64 +387,184 @@ class _ProfileTab extends StatelessWidget {
               ),
             ),
             SizedBox(height: 16.h),
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(20.w),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.05),
-                borderRadius: BorderRadius.circular(16.r),
-                border: Border.all(color: AppColors.primary.withOpacity(0.2)),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(12.w),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(Icons.bolt, color: AppColors.primary, size: 28.sp),
-                  ),
-                  SizedBox(width: 16.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Quick Check-In',
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                        Text(
-                          'Log your ${condition.name}',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: () => QuickCheckInModal.show(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      minimumSize: Size(80.w, 36.h),
-                      padding: EdgeInsets.symmetric(horizontal: 16.w),
-                    ),
-                    child: const Text('Start'),
-                  ),
-                ],
-              ),
-            ),
+            condition != null
+                ? _buildActiveCheckInCard(context, condition)
+                : _buildCompletionStreakCard(streak),
             SizedBox(height: 32.h),
           ],
         );
       },
+    );
+  }
+
+  Widget _buildActiveCheckInCard(BuildContext context, HealthCondition condition) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(20.w),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: EdgeInsets.all(12.w),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.bolt, color: AppColors.primary, size: 28.sp),
+          ),
+          SizedBox(width: 16.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Quick Check-In',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.primary,
+                  ),
+                ),
+                Text(
+                  'Log your ${condition.name}',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => QuickCheckInModal.show(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              minimumSize: Size(80.w, 36.h),
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
+            ),
+            child: const Text('Start'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompletionStreakCard(int streak) {
+    String currentEmoji;
+    if (streak == 0) {
+      currentEmoji = '🌱';
+    } else if (streak <= 3) {
+      currentEmoji = '👏';
+    } else if (streak <= 6) {
+      currentEmoji = '🎉';
+    } else if (streak <= 9) {
+      currentEmoji = '🔥';
+    } else if (streak <= 12) {
+      currentEmoji = '🚀';
+    } else {
+      currentEmoji = '🏆';
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(20.w),
+      decoration: BoxDecoration(
+        color: AppColors.success.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: AppColors.success.withOpacity(0.2)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Text(currentEmoji, style: TextStyle(fontSize: 40.sp)),
+              SizedBox(width: 16.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Thanks for checking in today. Well done!',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      'Streak: $streak days',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.success,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 16.h),
+          Text(
+            'Please come back tomorrow for your next check in. Feel free to log more detailed entries on the Track page.',
+            style: TextStyle(
+              fontSize: 13.sp,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          SizedBox(height: 24.h),
+          _buildMilestoneRow(streak),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMilestoneRow(int currentStreak) {
+    final milestones = [
+      {'val': 0, 'emoji': '🌱'},
+      {'val': 1, 'emoji': '👏'},
+      {'val': 4, 'emoji': '🎉'},
+      {'val': 7, 'emoji': '🔥'},
+      {'val': 10, 'emoji': '🚀'},
+      {'val': 13, 'emoji': '🏆'},
+    ];
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: milestones.map((m) {
+        final isUnlocked = currentStreak >= (m['val'] as int);
+        return Column(
+          children: [
+            Text(
+              m['val'].toString(),
+              style: TextStyle(
+                fontSize: 10.sp,
+                fontWeight: FontWeight.bold,
+                color: isUnlocked ? AppColors.textPrimary : AppColors.textLight,
+              ),
+            ),
+            SizedBox(height: 4.h),
+            Text(
+              m['emoji'] as String,
+              style: TextStyle(
+                fontSize: 20.sp,
+                color: isUnlocked ? null : Colors.grey.withOpacity(0.5),
+              ),
+            ),
+            SizedBox(height: 4.h),
+            Icon(
+              isUnlocked ? Icons.check_circle : Icons.lock,
+              size: 14.sp,
+              color: isUnlocked ? AppColors.success : AppColors.textLight,
+            ),
+          ],
+        );
+      }).toList(),
     );
   }
 

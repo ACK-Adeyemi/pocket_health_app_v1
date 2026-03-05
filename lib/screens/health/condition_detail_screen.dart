@@ -76,11 +76,17 @@ class _ConditionDetailScreenState extends State<ConditionDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Resolve static metadata (name, description, etc.) from the official list
+    // to ensure content updates propagate to existing users.
+    final staticData = HealthCondition.getStaticCondition(widget.condition.id);
+    final displayName = staticData?.name ?? widget.condition.name;
+    final displayDescription = staticData?.description ?? widget.condition.description;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(
-          widget.condition.name,
+          displayName,
           style: TextStyle(
             fontSize: 18.sp,
             fontWeight: FontWeight.w600,
@@ -168,7 +174,7 @@ class _ConditionDetailScreenState extends State<ConditionDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Condition Overview Card
-                _buildConditionOverview(entries, metrics),
+                _buildConditionOverview(entries, metrics, displayName, displayDescription),
                 SizedBox(height: 16.h),
 
                 // Quick Add Entry Section
@@ -207,7 +213,7 @@ class _ConditionDetailScreenState extends State<ConditionDetailScreen> {
     );
   }
 
-  Widget _buildConditionOverview(List<HealthEntry> entries, List<HealthMetric> metrics) {
+  Widget _buildConditionOverview(List<HealthEntry> entries, List<HealthMetric> metrics, String displayName, String displayDescription) {
     return Card(
       color: AppColors.surface,
       child: Padding(
@@ -236,7 +242,7 @@ class _ConditionDetailScreenState extends State<ConditionDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.condition.name,
+                        displayName,
                         style: TextStyle(
                           fontSize: 20.sp,
                           fontWeight: FontWeight.bold,
@@ -245,7 +251,7 @@ class _ConditionDetailScreenState extends State<ConditionDetailScreen> {
                       ),
                       SizedBox(height: 4.h),
                       Text(
-                        widget.condition.description,
+                        displayDescription,
                         style: TextStyle(
                           fontSize: 14.sp,
                           color: AppColors.textSecondary,
