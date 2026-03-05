@@ -30,11 +30,19 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 
-# ... but un-ignore the web folder for GitHub Pages
-!/build/web/
-
 # Ignore the entire build directory...
 /build/
+
+# Ignore compiled web artifacts in docs/ but keep source documentation
+/docs/*.js
+/docs/*.json
+/docs/*.html
+/docs/*.wasm
+/docs/assets/
+/docs/canvaskit/
+/docs/icons/
+!/docs/*.md
+!/docs/adr/
 
 # Symbolication related
 app.*.symbols

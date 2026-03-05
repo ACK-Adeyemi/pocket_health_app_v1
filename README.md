@@ -145,6 +145,12 @@ lib/
 
 ## Security & Privacy
 
+### API Key Security
+Firebase API keys used in this project are public by design but **MUST** be restricted in the [Google Cloud Console](https://console.cloud.google.com/apis/credentials) to prevent unauthorized use:
+- **Web**: Apply "HTTP Referrers" restrictions to your specific domain (e.g., `your-app.firebaseapp.com/*`).
+- **Mobile**: Apply "Android apps" or "iOS apps" restrictions using your package name/bundle ID and SHA-1 certificate.
+- **API Restrictions**: Limit keys to only the specific services required (Firestore, Auth, Storage, etc.).
+
 ### Data Protection
 - All user data encrypted at rest and in transit
 - Anonymous participation in community features
@@ -208,6 +214,8 @@ flutter test integration_test/
 flutter build web
 firebase deploy --only hosting
 ```
+
+**Security Note**: Compiled artifacts in the `build/web` directory contain your Firebase configuration. Ensure these are never committed to public repositories in a way that bypasses your `.gitignore` rules. Always ensure GCP restrictions are active for the production domain before deploying.
 
 ### Mobile App Stores
 - **Android**: Build APK/AAB and submit to Google Play

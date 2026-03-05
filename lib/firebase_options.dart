@@ -6,6 +6,13 @@ import 'package:flutter/foundation.dart'
 
 /// Default [FirebaseOptions] for use with your Firebase apps.
 ///
+/// SECURITY NOTE: Firebase API keys are intended to be public for client-side
+/// use (Web/Android/iOS). They are NOT secret keys like database passwords.
+/// However, to prevent unauthorized usage and quota theft, you MUST restrict
+/// these keys in the Google Cloud Console (APIs & Services > Credentials):
+/// 1. Application restrictions: Use "Websites" for Web, and "Android/iOS apps" for mobile.
+/// 2. API restrictions: Limit the key to only the services used (e.g., Firestore, Auth).
+///
 /// Example:
 /// ```dart
 /// import 'firebase_options.dart';
